@@ -1,16 +1,32 @@
 package com.whitemagic2014.events;
 
+import com.whitemagic2014.annotate.SpecialCommand;
 import com.whitemagic2014.annotate.Switch;
 import com.whitemagic2014.command.*;
+import com.whitemagic2014.command.impl.group.BaseGroupCommand;
+import com.whitemagic2014.config.properties.CommandRule;
+import com.whitemagic2014.config.properties.GlobalParam;
+import com.whitemagic2014.miniGame.MiniGameUtil;
+import com.whitemagic2014.miniGame.strategy.BaseMiniGameStrategy;
 import com.whitemagic2014.util.MagicSwitch;
+import com.whitemagic2014.util.spring.SpringApplicationContextUtil;
 import kotlin.coroutines.CoroutineContext;
-import net.mamoe.mirai.event.*;
-import net.mamoe.mirai.event.events.*;
+import net.mamoe.mirai.event.EventHandler;
+import net.mamoe.mirai.event.EventPriority;
+import net.mamoe.mirai.event.ListeningStatus;
+import net.mamoe.mirai.event.SimpleListenerHost;
+import net.mamoe.mirai.event.events.FriendMessageEvent;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.event.events.GroupTempMessageEvent;
+import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.OnlineMessageSource;
+import net.mamoe.mirai.message.data.PlainText;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,7 +39,6 @@ import java.util.stream.Collectors;
 public class CommandEvents extends SimpleListenerHost {
 
     private static final Logger logger = LoggerFactory.getLogger(CommandEvents.class);
-
 
     /**
      * 指令头 区分正常消息 和 指令消息
@@ -90,7 +105,6 @@ public class CommandEvents extends SimpleListenerHost {
 
     }
 
-
     /**
      * @Name: getArgs
      * @Description: 从消息体中获得 用空格分割的参数
@@ -133,7 +147,15 @@ public class CommandEvents extends SimpleListenerHost {
      * @Date: 2020/8/21 11:56
      **/
     private Command getCommand(String msg, Map<String, Command> commandMap) {
+        return this.getCommand(msg, commandMap, false, 0);
+    }
+
+    private Command getCommand(String msg, Map<String, Command> commandMap, Boolean isLike, int num) {
         String[] temp = msg.split(" ");
+        if (temp == null || temp.length == 0) {
+            return null;
+        }
+
         // 带头指令
         String headcommand = temp[0];
         // 获得去除指令头的 指令str
@@ -149,9 +171,29 @@ public class CommandEvents extends SimpleListenerHost {
             commandStr = temps.get(0);
         }
 
-        return commandMap.getOrDefault(commandStr.toLowerCase(), null);
-    }
+        if (!isLike) {
+            return commandMap.getOrDefault(commandStr.toLowerCase(), null);
+        } else {
+            // 1-过滤掉不支持模糊匹配的命令
+            List<String> likeCommandList = commandMap.keySet().stream()
+                    .filter(str -> ((BaseGroupCommand) commandMap.get(str)).getLike()).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(likeCommandList)) {
+                return null;
+            }
 
+            // 2-模糊匹配
+            List<String> commandList = likeCommandList.stream().filter(commandStr::contains)
+                    .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(commandList)) {
+                return null;
+            } else {
+                if (num >= commandList.size()) {
+                    return null;
+                }
+                return commandMap.get(commandList.get(num));
+            }
+        }
+    }
 
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception) {
@@ -175,8 +217,7 @@ public class CommandEvents extends SimpleListenerHost {
         if (isCommand(oriMsg)) {
             EverywhereCommand command = (EverywhereCommand) getCommand(oriMsg, everywhereCommands);
             if (command != null) {
-                Switch sw = command.getClass().getAnnotation(Switch.class);
-                if (sw != null && !MagicSwitch.check(sw.name())) {
+                if (validCommand(command, event)) {
                     return ListeningStatus.LISTENING;
                 }
                 Message result = command.execute(event.getSender(), getArgs(oriMsg), event.getMessage(), event.getSubject());
@@ -239,12 +280,41 @@ public class CommandEvents extends SimpleListenerHost {
     @NotNull
     @EventHandler(priority = EventPriority.NORMAL)
     public ListeningStatus onGroupMessage(@NotNull GroupMessageEvent event) throws Exception {
+
         String oriMsg = event.getMessage().contentToString();
+
+        // 消息发送者是否在进行游戏
+        if (MiniGameUtil.playerIsPlayingGame(event.getSender().getId())) {
+            try {
+                BaseMiniGameStrategy strategy = MiniGameUtil.getPlayingGamesById(event.getSender().getId());
+                String msg = Objects.requireNonNull(event.getMessage()
+                        .get(OnlineMessageSource.Incoming.FromGroup.Key)).getOriginalMessage().toString();
+                MiniGameUtil.MiniGameResultEnum r = strategy.play(msg, event.getSender(), event.getSubject());
+                if (MiniGameUtil.MiniGameResultEnum.WIN.equals(r)) {
+                    event.getSubject().sendMessage(new PlainText("YOU WIN"));
+                    MiniGameUtil.stopGame(event.getSender().getId());
+                } else if (MiniGameUtil.MiniGameResultEnum.LOSE.equals(r)) {
+                    event.getSubject().sendMessage(new PlainText("YOU LOSE"));
+                    MiniGameUtil.stopGame(event.getSender().getId());
+                } else if (MiniGameUtil.MiniGameResultEnum.CONTINUE.equals(r)) {
+                    return ListeningStatus.LISTENING;
+                } else if (MiniGameUtil.MiniGameResultEnum.STOP.equals(r)) {
+                    MiniGameUtil.stopGame(event.getSender().getId());
+                    event.getSubject().sendMessage(new PlainText("游戏中止"));
+                    return ListeningStatus.LISTENING;
+                }
+            } catch (NullPointerException npe) {
+                event.getSubject().sendMessage(new PlainText("没有进行中的游戏"));
+            } finally {
+                //事件拦截 防止公共消息事件再次处理
+                event.intercept();
+            }
+        }
+
         if (isCommand(oriMsg)) {
             GroupCommand command = (GroupCommand) getCommand(oriMsg, groupCommands);
             if (command != null) {
-                Switch sw = command.getClass().getAnnotation(Switch.class);
-                if (sw != null && !MagicSwitch.check(sw.name())) {
+                if (!validCommand(command, event)) {
                     return ListeningStatus.LISTENING;
                 }
                 Message result = command.execute(event.getSender(), getArgs(oriMsg), event.getMessage(), event.getSubject());
@@ -254,7 +324,25 @@ public class CommandEvents extends SimpleListenerHost {
                 //事件拦截 防止公共消息事件再次处理
                 event.intercept();
             } else {
-                // 单纯的带有指令头的消息 未注册的指令
+                // 单纯的带有指令头的消息 未注册的指令 尝试模糊匹配
+                int num = 0;
+                Message result = null;
+                while (result == null) {
+                    command = (GroupCommand) getCommand(oriMsg, groupCommands, true, num);
+                    if (command != null) {
+                        if (validCommand(command, event)) {
+                            result = command.execute(event.getSender(), getArgs(oriMsg), event.getMessage(), event.getSubject());
+                        }
+                        num++;
+                    } else {
+                        break;
+                    }
+                }
+                if (result != null) {
+                    event.getSubject().sendMessage(result);
+                }
+                //事件拦截 防止公共消息事件再次处理
+                event.intercept();
             }
         } else {
             // 非指令 暂时不处理
@@ -297,4 +385,58 @@ public class CommandEvents extends SimpleListenerHost {
         return ListeningStatus.LISTENING;
     }
 
+    private boolean validCommand(Command command, MessageEvent event) {
+        Switch sw = command.getClass().getAnnotation(Switch.class);
+        if (sw != null && !MagicSwitch.check(sw.name())) {
+            return false;
+        }
+
+        boolean ignoreWhitelist = false;
+        boolean ignoreBlacklist = false;
+        SpecialCommand sp = command.getClass().getAnnotation(SpecialCommand.class);
+        if (sp != null) {
+            if (checkSpecialCommand(event.getSender().getId(), sp.affectBotIds(), sp.affectIds())) {
+                return false;
+            }
+            ignoreWhitelist = sp.ignoreWhitelist();
+            ignoreBlacklist = sp.ignoreBlacklist();
+        }
+
+        if (event instanceof GroupMessageEvent) {
+            CommandRule commandRule = SpringApplicationContextUtil.getBean(CommandRule.class);
+            long groupId = ((GroupMessageEvent) event).getGroup().getId();
+
+            return (ignoreWhitelist || checkGroupWhitelist(groupId, commandRule))
+                    && (ignoreBlacklist || checkGroupBlacklist(groupId, commandRule));
+        }
+        return true;
+    }
+
+    private boolean checkSpecialCommand(long senderId, long[] affectBotIds, long[] affectIds) {
+        GlobalParam globalParam = SpringApplicationContextUtil.getBean(GlobalParam.class);
+        return Arrays.stream(affectIds).anyMatch(id -> id == senderId)
+                && Arrays.stream(affectBotIds).anyMatch(id -> id == globalParam.botId);
+    }
+
+    /**
+     * 群组白名单检查
+     *
+     * @param groupId     群号
+     * @param commandRule 配置
+     * @return true-允许响应 false-禁止响应
+     */
+    private boolean checkGroupWhitelist(long groupId, CommandRule commandRule) {
+        return !commandRule.enabledGroupWhitelist || commandRule.groupWhitelist.contains(groupId);
+    }
+
+    /**
+     * 群组黑名单检查
+     *
+     * @param groupId     群号
+     * @param commandRule 配置
+     * @return true-允许响应 false-禁止响应
+     */
+    private boolean checkGroupBlacklist(long groupId, CommandRule commandRule) {
+        return !commandRule.enabledGroupBlacklist || !commandRule.groupWhitelist.contains(groupId);
+    }
 }

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whitemagic2014.dao.HomeworkIconDao">
+    <insert id="insert" parameterType="com.whitemagic2014.pojo.HomeworkIcon">
+        insert into `homework_icon`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="iconUrl != null">
+                iconUrl,
+            </if>
+            <if test="iconName != null">
+                iconName,
+            </if>
+            <if test="serverId != null">
+                serverId,
+            </if>
+            <if test="serverType != null">
+                serverType,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="iconUrl != null">
+                #{iconUrl},
+            </if>
+            <if test="iconName != null">
+                #{iconName},
+            </if>
+            <if test="serverId != null">
+                #{serverId},
+            </if>
+            <if test="serverType != null">
+                #{serverType},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="list" resultType="com.whitemagic2014.pojo.HomeworkIcon">
+        SELECT * from homework_icon
+    </select>
+
+    <select id="getById" parameterType="java.lang.Integer" resultType="com.whitemagic2014.pojo.HomeworkIcon">
+        SELECT * from homework_icon WHERE id=#{id} LIMIT 1
+    </select>
+
+    <select id="getByName" parameterType="java.lang.String" resultType="com.whitemagic2014.pojo.HomeworkIcon">
+        SELECT * from homework_icon WHERE iconName=#{iconName} LIMIT 1
+    </select>
+
+    <delete id="deleteAll" >
+        DELETE FROM homework_icon
+    </delete>
+
+    <update id="updateById" parameterType="java.lang.String">
+        UPDATE homework_icon SET iconUrl=#{iconUrl} WHERE id=#{id}
+    </update>
+</mapper>

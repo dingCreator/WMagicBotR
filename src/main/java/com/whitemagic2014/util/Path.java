@@ -30,4 +30,8 @@ public class Path {
 
     }
 
+//    public static String getPath() {
+//        return "src/main/resources/";
+//    }
+
 }

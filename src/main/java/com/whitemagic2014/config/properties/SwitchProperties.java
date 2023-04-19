@@ -31,7 +31,7 @@ public class SwitchProperties {
                 }
             }
         } catch (Exception e) {
-            logger.error("读取 component switch 配置 失败", e);
+//            logger.error("读取 component switch 配置 失败", e);
         }
     }
 

@@ -1,0 +1,8 @@
+cache/
+botData.db
+deviceInfo.json
+src/main/resources/application.properties
+src/main/resources/application.yml
+.idea/
+img/
+logs/

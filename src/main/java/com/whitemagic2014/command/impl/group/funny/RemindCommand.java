@@ -6,6 +6,7 @@ import com.whitemagic2014.pojo.CommandProperties;
 import com.whitemagic2014.service.RemindService;
 import com.whitemagic2014.util.DateFormatUtil;
 import com.whitemagic2014.util.MagicHelper;
+import com.whitemagic2014.util.MagicMsgSender;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.message.data.Message;
@@ -59,7 +60,10 @@ public class RemindCommand extends NoAuthCommand {
             for (int i = lastIndex; i >= 0; i--) {
                 result += Integer.parseInt(hms[i]) * Math.pow(60, (lastIndex - i));
             }
+
             date = DateFormatUtil.dateAdd(new Date(), (long) result, TimeUnit.SECONDS);
+            taskKey = MagicMsgSender.sendGroupMsgTiming(subject.getId(), new At(sender.getId()).plus("提醒：").plus(args.get(1)), date);
+
         } else {
             try {
                 date = DateFormatUtil.sdfv3.parse(param);
@@ -69,6 +73,8 @@ public class RemindCommand extends NoAuthCommand {
             if (date.before(new Date())) {
                 return new PlainText(getDmail());
             }
+
+            taskKey = MagicMsgSender.sendGroupMsgTiming(subject.getId(), new At(sender.getId()).plus("提醒：").plus(args.get(1)), date);
         }
         taskKey = service.groupRemind(subject.getId(), sender.getId(), args.get(1), date);
         return new PlainText(getOk() + ",备忘id=" + taskKey);

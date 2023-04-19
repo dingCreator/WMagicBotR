@@ -1,6 +1,9 @@
 package com.whitemagic2014.command;
 
+import com.whitemagic2014.annotate.SpecialCommand;
 import com.whitemagic2014.pojo.CommandProperties;
+
+import java.lang.reflect.Field;
 
 /**
  * @Description: 指令接口 当接收到 指令(properties) 执行动作

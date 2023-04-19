@@ -24,6 +24,14 @@ public abstract class BaseGroupCommand implements GroupCommand {
     @Value("${bot.admin}")
     protected Long adminUid;
 
+    public Boolean getLike() {
+        return like;
+    }
+
+    /**
+     * 是否模糊匹配
+     */
+    protected Boolean like = false;
 
     @Override
     public Message execute(Member sender, ArrayList<String> args, MessageChain messageChain, Group subject) throws Exception {
@@ -132,6 +140,22 @@ public abstract class BaseGroupCommand implements GroupCommand {
             At temp = new At(uid);
             chain = chain.plus(temp);
         }
+        return chain;
+    }
+
+    /**
+     * @Name: makeAts
+     * @Description: 组成at消息链
+     * @Param: uids  用户qq号
+     * @Param: subject
+     * @Return: net.mamoe.mirai.message.data.MessageChain
+     * @Author: magic chen
+     * @Date: 2020/8/24 21:32
+     **/
+    protected MessageChain makeAt(Long uid) {
+        MessageChain chain = MessageUtils.newChain();
+        At temp = new At(uid);
+        chain = chain.plus(temp);
         return chain;
     }
 

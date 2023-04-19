@@ -215,6 +215,8 @@ public class SqlLiteConfig {
                 ");");
         v1_2_2.setSqls(sql_1_2_2);
         result.add(v1_2_2);
+        v1_2_2.setSqls(sql_1_2_2);
+        result.add(v1_2_2);
 
         // 续战优化
         DBVersionTable v1_2_3 = new DBVersionTable();
@@ -246,7 +248,34 @@ public class SqlLiteConfig {
         v1_4_0.setSqls(sql_1_4_0);
         result.add(v1_4_0);
 
+        // 配置表
+        DBVersionTable v9_9_8 = new DBVersionTable();
+        v9_9_8.setVer(new Version("9.9.8"));
+        List<String> sql_9_9_8 = new ArrayList<>();
+        sql_9_9_8.add("DROP TABLE IF EXISTS settings");
+        sql_9_9_8.add("CREATE TABLE \"homework_icon\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"settingName\" TEXT(1024),\n" +
+                " \"value\" TEXT(1024)\n" +
+                ");");
+        v9_9_8.setSqls(sql_9_9_8);
+        result.add(v9_9_8);
+
+        // icon
+        DBVersionTable v9_9_9 = new DBVersionTable();
+        v9_9_9.setVer(new Version("9.9.9"));
+        List<String> sql_9_9_9 = new ArrayList<>();
+        sql_9_9_9.add("DROP TABLE IF EXISTS homework_icon");
+        sql_9_9_9.add("CREATE TABLE \"homework_icon\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"iconUrl\" TEXT(1024),\n" +
+                " \"iconName\" TEXT(1024),\n" +
+                " \"serverId\" INTEGER,\n" +
+                " \"serverType\" INTEGER\n" +
+                ");");
+        v9_9_9.setSqls(sql_9_9_9);
+        result.add(v9_9_9);
+
         return result;
     }
-
 }

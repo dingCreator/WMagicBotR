@@ -184,9 +184,19 @@ public class MagicMsgSender {
         MessageChain messageChain = new PlainText("公告通知:\n").plus(msg);
         for (Group g : bot.getGroups()) {
             g.sendMessage(messageChain);
+            try {
+                Thread.sleep(5000L);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         for (Friend f : bot.getFriends()) {
             f.sendMessage(messageChain);
+            try {
+                Thread.sleep(5000L);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

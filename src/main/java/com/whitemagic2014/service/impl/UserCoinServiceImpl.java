@@ -9,8 +9,6 @@ import com.whitemagic2014.pojo.currency.UserCoin;
 import com.whitemagic2014.service.UserCoinService;
 import com.whitemagic2014.util.DateFormatUtil;
 import com.whitemagic2014.vo.PrivateModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +23,6 @@ import java.util.List;
  **/
 @Service
 public class UserCoinServiceImpl implements UserCoinService {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserCoinServiceImpl.class);
 
     @Autowired
     CoinLogDao coinLogDao;
@@ -150,7 +146,7 @@ public class UserCoinServiceImpl implements UserCoinService {
                 return new PrivateModel<>(ReturnCode.SUCCESS, "", true);
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            logger.error("error", e);
+            e.printStackTrace();
             return new PrivateModel<>(ReturnCode.FAIL, e.getMessage(), false);
         }
     }

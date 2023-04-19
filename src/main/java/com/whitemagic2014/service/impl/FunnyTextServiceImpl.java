@@ -32,7 +32,7 @@ public class FunnyTextServiceImpl implements FunnyTextService {
     @Override
     public String getChp() {
         try {
-            JSONObject result = template.getForObject("https://api.shadiao.app/chp", JSONObject.class);
+            JSONObject result = template.getForObject("https://api.shadiao.pro/chp", JSONObject.class);
             String text = result.getJSONObject("data").getString("text");
             String md5 = MagicMd5.getMd5String(text);
             if (funnyTextDao.getChpByHash(md5) == null) {
@@ -53,7 +53,7 @@ public class FunnyTextServiceImpl implements FunnyTextService {
     @Override
     public String getDjt() {
         try {
-            JSONObject result = template.getForObject("https://api.shadiao.app/du", JSONObject.class);
+            JSONObject result = template.getForObject("https://api.shadiao.pro/du", JSONObject.class);
             String text = result.getJSONObject("data").getString("text");
             String md5 = MagicMd5.getMd5String(text);
             if (funnyTextDao.getDjtByHash(md5) == null) {
@@ -73,7 +73,7 @@ public class FunnyTextServiceImpl implements FunnyTextService {
     @Override
     public String getPyq() {
         try {
-            JSONObject result = template.getForObject("https://api.shadiao.app/pyq", JSONObject.class);
+            JSONObject result = template.getForObject("https://api.shadiao.pro/pyq", JSONObject.class);
             String text = result.getJSONObject("data").getString("text");
             String md5 = MagicMd5.getMd5String(text);
             if (funnyTextDao.getPyqByHash(md5) == null) {

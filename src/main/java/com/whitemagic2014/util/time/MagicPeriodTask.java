@@ -10,7 +10,7 @@ import java.util.Date;
 public class MagicPeriodTask extends MagicTask {
 
 
-    public MagicPeriodTask build(String key, Task taskTk) {
+    public static MagicPeriodTask build(String key, Task taskTk) {
         return new MagicPeriodTask(key, taskTk);
     }
 
