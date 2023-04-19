@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * 纯概率决定胜负，前提是决斗双方必须抽取了幸运角色
  * BOSS有小幅的胜率提升
  *
- * @author huangkd
+ * @author ding
  * @author 条纹袜少女骑士团-佑树
  * @see com.whitemagic2014.command.impl.group.funny.LuckyRoleCommand
  */

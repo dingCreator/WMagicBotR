@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  * 扫雷游戏
  *
- * @author huangkd
+ * @author ding
  */
 public class MineSweeperStrategy implements BaseMiniGameStrategy {
 

@@ -39,7 +39,7 @@ import java.util.Objects;
  * 从花舞作业网获取icon数据
  * 目前暂时只用于幸运角色玩法
  *
- * @author huangkd
+ * @author ding
  * @see com.whitemagic2014.command.impl.group.funny.LuckyRoleCommand
  */
 @Command

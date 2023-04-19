@@ -4,7 +4,7 @@ import com.whitemagic2014.pojo.Settings;
 import org.springframework.stereotype.Repository;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/4/10
  */
 @Repository

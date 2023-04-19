@@ -3,7 +3,7 @@ package com.whitemagic2014.service;
 import com.whitemagic2014.pojo.Settings;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/4/10
  */
 public interface SettingsService {
@@ -11,7 +11,7 @@ public interface SettingsService {
     /**
      * 根据配置名获取配置值
      *
-     * @param settingName 配置名
+     * @param settingName 配置名/中文名
      * @return 配置值
      */
     Settings getSetting(String settingName);

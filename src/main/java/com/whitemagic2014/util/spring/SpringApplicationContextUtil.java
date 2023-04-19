@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/3/1
  */
 @Configuration

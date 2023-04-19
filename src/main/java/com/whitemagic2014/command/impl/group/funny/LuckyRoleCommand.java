@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * 抽取幸运角色，每小时只有一个结果
  * icon来源于花舞作业网
  *
- * @author huangkd
+ * @author ding
  * @see com.whitemagic2014.command.impl.group.funny.InitIconCommand
  */
 @Command

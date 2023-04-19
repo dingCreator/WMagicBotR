@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/3/21
  */
 public class CardUtil {

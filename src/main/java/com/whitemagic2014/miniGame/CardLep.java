@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 牌堆类
  *
- * @author huangkd
+ * @author ding
  * @date 2023/3/22
  */
 public class CardLep {

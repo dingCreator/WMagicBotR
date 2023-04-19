@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * 无条件匹配指令
  * 需要增加新的无条件指令请调用此类中的addLogic方法
  *
- * @author huangkd
+ * @author ding
  * @date 2023/2/16
  * @see this#addLogic(EmptyStringLogic, String)
  * @see this#addLogic(EmptyStringLogic, String, boolean)

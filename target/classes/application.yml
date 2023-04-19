@@ -1,0 +1,55 @@
+commandRule:
+  enabledGroupWhitelist: true
+  enabledGroupBlacklist: false
+  enabledBotAccountWhitelist: false
+  enabledBotAccountBlacklist: false
+  groupWhitelist: 479990802,256326696,770277763,575881974,700205407,749288786,324967511,579379021,643840822,249503090
+  groupBlacklist:
+  botAccountWhitelist:
+  botAccountBlacklist: 423441394
+
+global:
+  botId: 1586197314
+  botName: 初音
+  botNick: 小初音
+  ownerId: 1072065168
+  ownerNick: 除了赢啥都会
+
+specialRule:
+  luckyRole:
+    rigged:
+      "[
+      {\"affectIds\":[1226086891],\"rate\":10,\"variantRate\":0,\"specialId\":114514,\"specialName\":\"屑绿毛\",\"specialIconFilePath\":\"img/icon/special/3423574347.jpg\"},
+      {\"affectIds\":[1412746809],\"rate\":2,\"variantRate\":1,\"specialId\":1089,\"specialName\":\"春剑\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_春剑.jpeg\"},
+      {\"affectIds\":[1412746809],\"rate\":2,\"variantRate\":1,\"specialId\":1003,\"specialName\":\"剑圣\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_剑圣.jpeg\"},
+      {\"affectIds\":[1412746809],\"rate\":2,\"variantRate\":1,\"specialId\":1140,\"specialName\":\"鬼剑\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_鬼剑.jpeg\"},
+      {\"affectIds\":[1412746809],\"rate\":2,\"variantRate\":1,\"specialId\":1803,\"specialName\":\"风剑\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_风剑.jpeg\"},
+      {\"affectIds\":[1412746809],\"rate\":2,\"variantRate\":1,\"specialId\":1225,\"specialName\":\"水怜\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_水怜.jpeg\"},
+      {\"affectIds\":[1692844532],\"rate\":7,\"variantRate\":0,\"specialId\":1190,\"specialName\":\"黑老师\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_黑老师.jpeg\"},
+      {\"affectIds\":[1692844532],\"rate\":7,\"variantRate\":0,\"specialId\":100000,\"specialName\":\"黑姐姐\",\"specialIconFilePath\":\"img/icon/special/black_sister.jpg\"},
+      {\"affectIds\":[184715122],\"rate\":5,\"variantRate\":20,\"specialId\":27,\"specialName\":\"后来的小宝贝\",\"specialIconFilePath\":\"img/icon/normal/zh-cn_黑猪.jpeg\"},
+      {\"affectIds\":[261823885],\"rate\":10,\"variantRate\":5,\"specialId\":1158,\"specialName\":\"人驼\",\"specialIconFilePath\":\"img/icon/normal/zh-tw_人驼.jpeg\"}
+      ]"
+    endWhileSpRuleAnalyseFailed: false
+  luckyRoleBattle:
+    rigged:
+      "[
+      {\"ruleName\":\"小初音天下第一\",\"affectIds\":null,\"iconId\":1134,\"invariantRate\":20,\"variantRate\":160},
+      {\"ruleName\":\"小初音天下第一\",\"affectIds\":null,\"iconId\":1012,\"invariantRate\":10,\"variantRate\":100},
+      {\"ruleName\":\"小初音天下第一\",\"affectIds\":null,\"iconId\":1807,\"invariantRate\":30,\"variantRate\":155},
+      {\"ruleName\":\"绿毛胜率提升\",\"affectIds\":null,\"iconId\":114514,\"invariantRate\":30,\"variantRate\":65},
+      {\"ruleName\":\"赢-怜黑幕惩罚\",\"affectIds\":[1412746809],\"iconId\":1089,\"invariantRate\":-50,\"variantRate\":-30},
+      {\"ruleName\":\"赢-怜黑幕惩罚\",\"affectIds\":[1412746809],\"iconId\":1003,\"invariantRate\":-50,\"variantRate\":-30},
+      {\"ruleName\":\"赢-怜黑幕惩罚\",\"affectIds\":[1412746809],\"iconId\":1140,\"invariantRate\":-50,\"variantRate\":-30},
+      {\"ruleName\":\"赢-怜黑幕惩罚\",\"affectIds\":[1412746809],\"iconId\":1803,\"invariantRate\":-50,\"variantRate\":-30},
+      {\"ruleName\":\"赢-怜黑幕惩罚\",\"affectIds\":[1412746809],\"iconId\":1225,\"invariantRate\":-50,\"variantRate\":-30},
+      {\"ruleName\":\"十灵驱-老师黑幕惩罚\",\"affectIds\":[1692844532],\"iconId\":1190,\"invariantRate\":-60,\"variantRate\":-30},
+      {\"ruleName\":\"十灵驱-姐姐黑幕惩罚\",\"affectIds\":[1692844532],\"iconId\":100000,\"invariantRate\":-60,\"variantRate\":-30},
+      {\"ruleName\":\"铃鹿御前-黑猪黑幕惩罚\",\"affectIds\":[184715122],\"iconId\":27,\"invariantRate\":-70,\"variantRate\":-30},
+      {\"ruleName\":\"铃鹿御前-黑猪黑幕惩罚\",\"affectIds\":[184715122],\"iconId\":9,\"invariantRate\":-70,\"variantRate\":-30},
+      {\"ruleName\":\"盒子哥-羊驼黑幕惩罚\",\"affectIds\":[261823885],\"iconId\":1158,\"invariantRate\":-50,\"variantRate\":-30}
+      ]"
+    endWhileSpRuleAnalyseFailed: true
+
+immortal:
+  collectGroups: 256326696,700205407,749288786,324967511,579379021,643840822,249503090

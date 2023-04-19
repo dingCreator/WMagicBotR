@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/4/10
  */
 @Service
@@ -24,7 +24,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     @Override
     public int insertOrUpdate(Settings settings) {
-        Assert.notNull(settings.getSettingName(), "setting name must not be null");
+        Assert.notNull(settings.getSettingName(), "name must not be null");
         Settings entity = settingsDao.getSetting(settings.getSettingName());
         if (entity != null) {
             entity.setValue(settings.getValue());

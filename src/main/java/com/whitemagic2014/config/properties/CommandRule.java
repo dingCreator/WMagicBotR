@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * bot指令规则
  *
- * @author huangkd
+ * @author ding
  * @date 2023/2/1
  */
 @Component

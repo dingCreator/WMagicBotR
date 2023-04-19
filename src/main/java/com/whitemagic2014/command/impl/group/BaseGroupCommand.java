@@ -1,6 +1,9 @@
 package com.whitemagic2014.command.impl.group;
 
 import com.whitemagic2014.command.GroupCommand;
+import com.whitemagic2014.config.properties.CommandRule;
+import com.whitemagic2014.config.properties.GlobalParam;
+import com.whitemagic2014.util.spring.SpringApplicationContextUtil;
 import com.whitemagic2014.vo.PrivateModel;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -40,7 +43,15 @@ public abstract class BaseGroupCommand implements GroupCommand {
         if (!checkResult.isSuccess()) {
             return new At(sender.getId()).plus(" " + checkResult.getReturnMessage());
         }
-        return executeHandle(sender, args, messageChain, subject);
+
+        Message message = executeHandle(sender, args, messageChain, subject);
+        if (message != null) {
+            CommandRule rule = SpringApplicationContextUtil.getBean(CommandRule.class);
+            if (rule.enabledBotAccountBlacklist && rule.botAccountBlacklist.contains(sender.getId())) {
+                return new At(sender.getId()).plus(" 你已被拉黑，请联系管理员处理");
+            }
+        }
+        return message;
     }
 
 

@@ -12,7 +12,7 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/2/3
  */
 public class RecognizeTextUtil {

@@ -7,7 +7,7 @@ import net.mamoe.mirai.contact.Member;
 /**
  * 游戏规则接口
  *
- * @author huangkd
+ * @author ding
  */
 public interface BaseMiniGameStrategy {
 

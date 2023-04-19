@@ -13,7 +13,7 @@ import net.mamoe.mirai.message.data.PlainText;
 import java.util.ArrayList;
 
 /**
- * @author huangkd
+ * @author ding
  * @date 2023/2/2
  */
 @Command

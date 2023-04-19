@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 小游戏工具
  *
- * @author huangkd
+ * @author ding
  */
 public class MiniGameUtil {
     /**
