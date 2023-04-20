@@ -53,49 +53,51 @@ public class LuckyRoleBattleCommand extends NoAuthCommand {
 
     // 触发事件
     static {
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]临阵脱逃，[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]中了[@winner]事先布下的陷阱！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]使用了sl，[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]在前往决斗的路上迷路了，[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@winner]使用科技，大败[@loser]！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]使用了科技，但被对方举报成功，[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@winner]假装不敌，趁对方不备杀了一个回马枪击败[@loser]！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@winner]率先发动UB，击败[@loser]！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]与TA的幸运角色约会，咕咕咕~[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]看错决斗时间，迟到了，[@winner]不战而胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]的自残技能对自己造成了暴击，[@winner]获胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]发起挑战，手滑使用了小小甜心！[@winner]获胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]状态低迷，全程0暴，[@winner]轻松取胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@winner]决斗前偷走了[@loser]的专武，在决斗中轻松取胜！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@winner]不讲武德，偷袭[@loser]，击败对手！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
                 "[@loser]不讲武德，偷袭[@winner]，但被对方识破并反杀！"));
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.OPPONENT_WIN, LuckyRoleBattleResult.SENDER_WIN),
+                "[@loser]在前往决斗的路上被佩可拉去吃饭，[@winner]不战而胜！"));
 
         EVENTS.add(new BattleTriggerEvent(1, buildResultSet(LuckyRoleBattleResult.SENDER_WIN),
                 "[@sender]作为决斗发起方，主动选择了自己熟悉的地方进行决斗，轻松取胜！"));
         EVENTS.add(new BattleTriggerEvent(1, buildResultSet(LuckyRoleBattleResult.SENDER_WIN),
                 "决斗现场大雾弥漫，[@sender]凭借对地形的熟悉，轻松取胜！"));
 
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.DRAW),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.DRAW),
                 "决斗现场大雾弥漫，浓雾之中双方都没有找到对方！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.DRAW),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.DRAW),
                 "双方都在前往决斗的路上迷路了！"));
-        EVENTS.add(new BattleTriggerEvent(4, buildResultSet(LuckyRoleBattleResult.DRAW),
+        EVENTS.add(new BattleTriggerEvent(3, buildResultSet(LuckyRoleBattleResult.DRAW),
                 "双方都与TA的幸运角色约会，无人到达决斗现场"));
     }
 

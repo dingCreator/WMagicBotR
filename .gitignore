@@ -1,6 +1,7 @@
 cache/
 botData.db
 deviceInfo.json
+device.json
 src/main/resources/application.properties
 src/main/resources/application.yml
 .idea/
