@@ -30,7 +30,7 @@ import java.util.List;
  * @author: magic chen
  * @date: 2023/4/17 10:41
  **/
-@Command
+//@Command
 @Switch(name = Dic.Component_ChatGPT)
 public class RemindCommandV2 extends NoAuthCommand {
 

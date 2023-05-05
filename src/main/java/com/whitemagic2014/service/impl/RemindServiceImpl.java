@@ -33,7 +33,7 @@ public class RemindServiceImpl implements RemindService {
 
     @Override
     public String groupRemind(Long gid, Long atId, String msgStr, Date date) {
-        String taskKey = MagicMsgSender.sendGroupMsgTiming(gid, new At(atId).plus(msgStr), new Date(date.getTime()));
+        String taskKey = MagicMsgSender.sendGroupMsgTiming(gid, new At(atId).plus("提醒：").plus(msgStr), new Date(date.getTime()));
         Remind remind = new Remind();
         remind.setTaskKey(taskKey);
         remind.setGid(gid);

@@ -1,5 +1,6 @@
 package com.whitemagic2014.command.impl.group.immortal;
 
+import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
 import com.whitemagic2014.config.properties.GlobalParam;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
  * @author ding
  * @date 2023/4/17
  */
+@Command
 public class ShelvesBuyCommand extends OwnerCommand {
 
     @Autowired
@@ -35,12 +37,12 @@ public class ShelvesBuyCommand extends OwnerCommand {
             int args1 = Integer.parseInt(args.get(0).trim());
             int args2 = Integer.parseInt(args.get(1).trim());
 
-            int startIndex = Math.max(args1, args2);
-            int endIndex = Math.min(args1, args2);
+            int startIndex = Math.min(args1, args2);
+            int endIndex = Math.max(args1, args2);
 
-            for (int i = endIndex; i <= startIndex; i--) {
-                bot.getGroupOrFail(sender.getGroup().getId()).sendMessage(new PlainText("坊市购买" + i));
-                Thread.sleep(500);
+            for (int i = startIndex; i <= endIndex; i++) {
+                bot.getGroupOrFail(sender.getGroup().getId()).sendMessage(new PlainText("坊市购买" + startIndex));
+                Thread.sleep(10000);
             }
         } catch (Exception e) {
             e.printStackTrace();

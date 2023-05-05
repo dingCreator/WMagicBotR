@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author huangkd
  * @date 2023/3/19
  */
-@Command
+//@Command
 public class ShelvesCommand extends OwnerCommand {
 
     private static final int DEFAULT_PRICE = 10000;

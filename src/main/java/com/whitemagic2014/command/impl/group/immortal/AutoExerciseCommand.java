@@ -78,6 +78,8 @@ public class AutoExerciseCommand extends OwnerCommand {
     private static final String AUTO_UPGRADE_KEYWORD = "修仙_突破模式";
     private static final String ATTACK_PERIOD_KEYWORD = "修仙_攻击间歇";
     private static final String BOT_RANK_KEYWORD = "修仙_当前境界";
+    private static final String LAST_COLLECT_HERBS_TIME_KEYWORD = "修仙_前次收取药草时间";
+    private static final String COLLECT_HERBS_PERIOD_KEYWORD = "修仙_收取药草间隔";
 
     /**
      * 容器
@@ -115,6 +117,9 @@ public class AutoExerciseCommand extends OwnerCommand {
 
     private static final long TASK_PERIOD = 6 * 60 * 1000L;
     private static final long TASK_DELAY = 2 * 1000L;
+
+    private static final long COLLECT_HERBS_PERIOD = 30 * 1000L;
+    private static final long COLLECT_HERBS_DELAY = 10 * 1000L;
 
     private static final AtomicBoolean CONTINUE_ATTACK = new AtomicBoolean(true);
     private static final long ATTACK_BOSS_PERIOD = 20 * 1000L;
@@ -471,7 +476,7 @@ public class AutoExerciseCommand extends OwnerCommand {
         bot = MagicBotR.getBot();
         bot.getGroupOrFail(GROUP_ID).sendMessage(new PlainText("闭关"));
         // 定时闭关出关
-        String key = MagicMd5.getMd5String("g-" + GROUP_ID + "exercise-inOut");
+        String key = MagicMd5.getMd5String("exercise-inOut");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
             waitRandomMillis(1000, 3000);
@@ -491,7 +496,6 @@ public class AutoExerciseCommand extends OwnerCommand {
                 case 2:
                     if (System.currentTimeMillis() >= attackStartTimeMillis
                             + 2 * SettingsCache.getInstance().getSettingsAsInt(ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000) {
-//                        bot.getGroupOrFail(GROUP_ID).sendMessage(new PlainText("讨伐世界BOSS1"));
                         attackAllBoss();
                         attackStartTimeMillis = System.currentTimeMillis();
                     }
@@ -501,7 +505,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
         }).schedule(IN_OUT_DELAY, IN_OUT_PERIOD);
 
-        key = MagicMd5.getMd5String("g-" + GROUP_ID + "exercise-wanted");
+        key = MagicMd5.getMd5String("exercise-wanted");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
             if (!SettingsCache.getInstance().getSettingsAsBoolean(AUTO_WANTED_KEYWORD, false)) {
@@ -523,7 +527,7 @@ public class AutoExerciseCommand extends OwnerCommand {
         }).schedule(WANTED_DELAY, WANTED_PERIOD);
 
         // 自动突破
-        key = MagicMd5.getMd5String("g-" + GROUP_ID + "exercise-improve");
+        key = MagicMd5.getMd5String("exercise-improve");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
             waitRandomMillis(1000, 3000);
@@ -535,6 +539,27 @@ public class AutoExerciseCommand extends OwnerCommand {
                 bot.getGroupOrFail(GROUP_ID).sendMessage(new PlainText("突破 不使用"));
             }
         }).schedule(IMPROVE_DELAY, IMPROVE_PERIOD);
+
+        // 自动收取药草
+        key = MagicMd5.getMd5String("exercise-collectHerbs");
+        PERIOD_KEYS.add(key);
+        MagicPeriodTask.build(key, () -> {
+            Date date = new Date(0);
+            String lastCollectTimeStr = SettingsCache.getInstance().getSettings(LAST_COLLECT_HERBS_TIME_KEYWORD);
+            if (!StringUtils.isEmpty(lastCollectTimeStr)) {
+                date = DateUtil.parse(lastCollectTimeStr, "yyyy-MM-dd HH:mm:ss");
+            }
+
+            int collectHerbsPeriod = SettingsCache.getInstance().getSettingsAsInt(COLLECT_HERBS_PERIOD_KEYWORD, 24);
+            date = DateUtil.offsetHour(date, collectHerbsPeriod);
+            date = DateUtil.offsetSecond(date, (int) COLLECT_HERBS_DELAY);
+
+            Date now = new Date();
+            if (now.after(date)) {
+                SettingsCache.getInstance().setSettings(LAST_COLLECT_HERBS_TIME_KEYWORD, DateUtil.format(now, "yyyy-MM-dd HH:mm:ss"));
+                bot.getGroupOrFail(GROUP_ID).sendMessage(new PlainText("灵田收取"));
+            }
+        }).schedule(COLLECT_HERBS_DELAY, COLLECT_HERBS_PERIOD);
 
         registerWanted();
     }
@@ -571,7 +596,11 @@ public class AutoExerciseCommand extends OwnerCommand {
                 return;
             }
             if (!g.getBossAllDefeated()) {
-                bot.getGroupOrFail(g.getGroupId()).sendMessage(new PlainText("查询世界BOSS"));
+                try {
+                    bot.getGroupOrFail(g.getGroupId()).sendMessage(new PlainText("查询世界BOSS"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             waitRandomMillis(3000, 3000);
         });
