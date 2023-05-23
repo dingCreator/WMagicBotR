@@ -1,5 +1,6 @@
 package com.whitemagic2014.command.impl.group.immortal;
 
+import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.command.impl.group.EmptyStringCommand;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
  * @author ding
  * @date 2023/4/17
  */
+@Command
 public class ShelvesDownCommand extends OwnerCommand {
 
     @Autowired
@@ -46,13 +48,11 @@ public class ShelvesDownCommand extends OwnerCommand {
 
                 endIndex = Math.max(left, endIndex);
             }
-
             startIndex = Math.min(right, startIndex);
-            endIndex = Math.max(Integer.parseInt(args.get(2).trim()), endIndex);
 
             for (int i = startIndex; i >= endIndex; i--) {
                 bot.getGroupOrFail(sender.getGroup().getId()).sendMessage("坊市下架" + i);
-                Thread.sleep(500);
+                Thread.sleep(10000);
             }
         } catch (Exception e) {
             System.out.println("数字解析失败");

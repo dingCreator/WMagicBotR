@@ -1,8 +1,14 @@
 package com.whitemagic2014.command.impl.group.immortal.util;
 
+import com.alibaba.fastjson.JSONObject;
 import com.whitemagic2014.cache.SettingsCache;
+import com.whitemagic2014.command.impl.group.immortal.CollectConfigCommand;
+import com.whitemagic2014.command.impl.group.immortal.util.DTO.FarmDTO;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,6 +29,7 @@ public class CalBossUtil {
         RANK_MAP.put("筑基境", 5);
         RANK_MAP.put("结丹境", 8);
         RANK_MAP.put("元婴境", 11);
+        RANK_MAP.put("元姗境", 11);
         RANK_MAP.put("化神境", 14);
         RANK_MAP.put("炼虚境", 17);
         RANK_MAP.put("合体境", 20);
@@ -35,6 +42,7 @@ public class CalBossUtil {
     }
 
     private static final String[] MINOR_RANK = new String[]{"初期", "中期", "圆满"};
+    private static final String BOSS_RANK_LIMIT = "修仙_攻击boss境界上限";
 
     public static int getRank(String info) {
         // 获取大境界
@@ -82,12 +90,20 @@ public class CalBossUtil {
      * @param info 信息
      * @return 是否能打
      */
-    public static boolean canAttackBoss(String info, int nowRank) {
+    public static boolean canAttackBoss(String info, int nowRank, long groupId) {
         int rank = CalBossUtil.getRank(info);
         if (rank <= 0) {
             return false;
         }
         // 低9个小境界以内（不包括9）可以打
-        return nowRank - rank <= 8;
+        // 根据配置留点boss
+        List<FarmDTO> list = SettingsCache.getInstance().getSettings(FarmDTO.SETTINGS_KEYWORD, str ->
+                        JSONObject.parseArray(str, FarmDTO.class));
+        if (CollectionUtils.isEmpty(list)) {
+            return false;
+        }
+        int maxRank = list.stream().filter(farm -> farm.getGroupId().equals(groupId)).mapToInt(FarmDTO::getRank)
+                .findFirst().orElse(0);
+        return nowRank - rank <= 8 && rank <= maxRank;
     }
 }

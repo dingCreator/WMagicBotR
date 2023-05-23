@@ -27,7 +27,7 @@ public class RemindServiceImpl implements RemindService {
     public void loadTask() {
         List<Remind> reminds = remindDao.loadReminds(new Date().getTime());
         for (Remind r : reminds) {
-            MagicMsgSender.sendGroupMsgTiming(r.getGid(), new At(r.getAtId()).plus(r.getRemind()), new Date(r.getDateL()), r.getTaskKey());
+            MagicMsgSender.sendGroupMsgTiming(r.getGid(), new At(r.getAtId()).plus("提醒：").plus(r.getRemind()), new Date(r.getDateL()), r.getTaskKey());
         }
     }
 

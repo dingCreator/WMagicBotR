@@ -45,6 +45,8 @@ public class RecognizeTextUtil {
         }
         String urlStr = Mirai.getInstance().queryImageUrl(sender.getBot(), image);
         BufferedImage bImg = ImageIO.read(new URL(urlStr));
-        return iTesseract.doOCR(bImg).trim().replace(" ", "");
+        String str = iTesseract.doOCR(bImg).trim().replace(" ", "");
+        System.out.println("图片文字识别结果【" + str + "】");
+        return str;
     }
 }

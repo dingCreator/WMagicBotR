@@ -41,10 +41,6 @@ public class ShelvesUpCommand extends OwnerCommand {
 
     @Override
     protected Message executeHandle(Member sender, ArrayList<String> args, MessageChain messageChain, Group subject) throws Exception {
-        if (CollectionUtils.isEmpty(args)) {
-            return new PlainText("请输入参数 [价格] [种类名]");
-        }
-
         Bot bot = MagicBotR.getBot();
         int price = DEFAULT_PRICE;
         if (args.size() > 0) {
@@ -118,7 +114,7 @@ public class ShelvesUpCommand extends OwnerCommand {
                         for (int i = 0; i < count; i++) {
                             bot.getGroupOrFail(groupId).sendMessage(new PlainText("坊市上架" + name + " " + price));
                             try {
-                                Thread.sleep(500);
+                                Thread.sleep(10000);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

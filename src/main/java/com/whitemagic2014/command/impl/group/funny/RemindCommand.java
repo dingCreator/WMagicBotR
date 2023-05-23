@@ -53,6 +53,7 @@ public class RemindCommand extends NoAuthCommand {
         String param = args.get(0);
         String taskKey = "";
         Date date;
+        param = param.replace("：", ":");
         if (param.contains("后")) {
             String time = param.replace("后", "");
             String[] hms = time.split(":");
