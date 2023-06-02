@@ -1,5 +1,8 @@
 package com.whitemagic2014.config;
 
+import com.github.WhiteMagic2014.Gmp;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -9,6 +12,23 @@ import org.springframework.context.annotation.Configuration;
  **/
 @Configuration
 public class Beans {
+
+
+    @Value("${ChatGPT.proxyServer}")
+    private String proxyServer;
+
+    @Value("${ChatGPT.key}")
+    private String key;
+
+    @Value("${ChatGPT.org}")
+    private String org;
+
+    @Bean
+    public Gmp initGmp() {
+        Gmp gmp = new Gmp(proxyServer, key);
+        gmp.setOrg(org);
+        return gmp;
+    }
 
 
 }

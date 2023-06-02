@@ -102,10 +102,44 @@
 | 自然语言指令                               | 构思中,备忘功能已经做了v2版本，实现自然语言指令         |
 | **pcr公会战适配新版本**                      | 有想法,但是没动力                         |
 | 接入微信bot                              | ~~搁置中~~已放弃,没找到稳定更新的微信bot java开源框架 |
+| 根据提供的训练集问答                           | 已完成                               |
 
 ## 更新记录
 
 本项目不稳定更新中(有空的时候会更新)
+
+### v1.6.0
+
+- gpt聊天新增stream模式，可以有效减少由于生成返回时间过长导致的超时问题
+- 配置文件中 ChatGPT.chat.stream 默认关闭
+
+### v1.5.4
+
+- 封装gpt相关业务代码为[gpt-magic-plus](https://github.com/WhiteMagic2014/gpt-magic-plus)
+- 部分gpt业务代码优化
+
+### v1.5.3
+
+- 优化gpt相关服务,现在可以配置一个代理服务地址来解决部分地区无法访问的问题
+
+### v1.5.2
+
+- 优化备忘指令，调整指令域 群 -> 不限
+
+### v1.5.1
+
+- 修复xmla命令并发高的情况下，question embeddings 会被覆盖的bug
+
+### v1.5.0
+
+- 现在可以自己提供文本向量集合,让gpt根据提供的向量集合回答问题
+- 数据文件命名 embeddings.json,放置在jar包同目录下,具体的格式可以参考demo
+- embeddings
+  使用openai的CreateEmbeddingsRequest计算。可以使用我封装的[gpt-magic](https://github.com/WhiteMagic2014/gpt-magic)
+  来方便的调用相关api,觉得好用的话请star一下给我一些支持哦
+- 新增的指令请详见[指令book](CommandBook.md)
+- 降级mirai版本为2.14.0, 配合对应的[fix-protocol-version](https://github.com/cssxsh/fix-protocol-version)
+  解决部分登录问题(每个人bot风控情况可能不同,你也可以使用2.15m1的mirai 配合对应的fix-protocol,主要目标是解决问题就行)
 
 ### v1.4.1
 
