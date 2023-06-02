@@ -217,7 +217,7 @@ public class CommandEvents extends SimpleListenerHost {
         if (isCommand(oriMsg)) {
             EverywhereCommand command = (EverywhereCommand) getCommand(oriMsg, everywhereCommands);
             if (command != null) {
-                if (validCommand(command, event)) {
+                if (!validCommand(command, event)) {
                     return ListeningStatus.LISTENING;
                 }
                 Message result = command.execute(event.getSender(), getArgs(oriMsg), event.getMessage(), event.getSubject());
@@ -437,6 +437,6 @@ public class CommandEvents extends SimpleListenerHost {
      * @return true-允许响应 false-禁止响应
      */
     private boolean checkGroupBlacklist(long groupId, CommandRule commandRule) {
-        return !commandRule.enabledGroupBlacklist || !commandRule.groupWhitelist.contains(groupId);
+        return !commandRule.enabledGroupBlacklist || !commandRule.groupBlacklist.contains(groupId);
     }
 }
