@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import xyz.cssxsh.mirai.tool.FixProtocolVersion;
+import xyz.cssxsh.mirai.tool.KFCFactory;
 
 import java.util.List;
 
@@ -45,6 +47,9 @@ public class Simulator implements ApplicationRunner {
     @Value("${log.net.path}")
     String lognet;
 
+    @Value("${project.version}")
+    public String version;
+
     @Autowired
     RemindService remindService;
 
@@ -53,6 +58,7 @@ public class Simulator implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        logger.info("bot版本: " + version);
         // 数据库check初始化
         DBInitHelper.getInstance().initDBIfNotExist();
         // 数据库版本检查更新
@@ -66,7 +72,10 @@ public class Simulator implements ApplicationRunner {
         events.add(commandEvents);
         // 读取备忘数据
         remindService.loadTask();
-
+        // 更新协议
+        FixProtocolVersion.update();
+        // 连接外部签名服务
+        KFCFactory.install();
         // 启动bot
         try {
             MagicBotR.startBot(account, pwd, "device.json", events, lognet);

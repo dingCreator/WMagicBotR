@@ -102,10 +102,87 @@
 | 自然语言指令                               | 构思中,备忘功能已经做了v2版本，实现自然语言指令         |
 | **pcr公会战适配新版本**                      | 有想法,但是没动力                         |
 | 接入微信bot                              | ~~搁置中~~已放弃,没找到稳定更新的微信bot java开源框架 |
+| 根据提供的训练集问答                           | 已完成                               |
 
 ## 更新记录
 
 本项目不稳定更新中(有空的时候会更新)
+
+### v1.7.2
+
+- 启动时优化，显示当前bot版本
+
+### v1.7.1
+
+- 升级了[magic-gpt-plus](https://github.com/WhiteMagic2014/gpt-magic-plus)的版本为1.1.13
+
+### v1.7.0
+
+- [mirai core](https://github.com/mamoe/mirai) 升级为 2.15.0
+- [fix-protocol-version](https://github.com/cssxsh/fix-protocol-version) 升级为1.9.4
+-
+
+由于现在风控越来越严重，mirai开放了对接第三方签名服务的接口，这里使用了[magic-signer-guide](https://github.com/kiliokuara/magic-signer-guide)
+
+```
+务必请自己部署以保障安全性
+$ docker pull kiliokuara/vivo50:latest
+$ docker run -d --restart=always \
+  -e SERVER_IDENTITY_KEY=vivo50 \
+  -e AUTH_KEY=kfc \
+  -e PORT=8888 \
+  -p 8888:8888 \
+  --log-opt mode=non-blocking --log-opt max-buffer-size=4m \
+  -v /home/vivo50/serverData:/app/serverData \
+  -v /home/vivo50/testbot:/app/testbot \
+  --name vivo50 \
+  kiliokuara/vivo50
+```
+
+- KFCFactory.json 中的配置请按照上面的配置酌情修改
+- 记得删除原来的 device.json 和 cache文件夹
+
+### v1.6.2
+
+- 功能没什么更新，升级了[gpt-magic-plus](https://github.com/WhiteMagic2014/gpt-magic-plus)的版本为1.1.1，一些相关的方法使用变了
+
+### v1.6.1
+
+- 功能没什么更新，升级了[gpt-magic-plus](https://github.com/WhiteMagic2014/gpt-magic-plus)的版本为1.0.5，GptMessage
+  被移除了，现在统一使用[gpt-magic](https://github.com/WhiteMagic2014/gpt-magic)中的 ChatMessage
+
+### v1.6.0
+
+- gpt聊天新增stream模式，可以有效减少由于生成返回时间过长导致的超时问题
+- 配置文件中 ChatGPT.chat.stream 默认关闭
+
+### v1.5.4
+
+- 封装gpt相关业务代码为[gpt-magic-plus](https://github.com/WhiteMagic2014/gpt-magic-plus)
+- 部分gpt业务代码优化
+
+### v1.5.3
+
+- 优化gpt相关服务,现在可以配置一个代理服务地址来解决部分地区无法访问的问题
+
+### v1.5.2
+
+- 优化备忘指令，调整指令域 群 -> 不限
+
+### v1.5.1
+
+- 修复xmla命令并发高的情况下，question embeddings 会被覆盖的bug
+
+### v1.5.0
+
+- 现在可以自己提供文本向量集合,让gpt根据提供的向量集合回答问题
+- 数据文件命名 embeddings.json,放置在jar包同目录下,具体的格式可以参考demo
+- embeddings
+  使用openai的CreateEmbeddingsRequest计算。可以使用我封装的[gpt-magic](https://github.com/WhiteMagic2014/gpt-magic)
+  来方便的调用相关api,觉得好用的话请star一下给我一些支持哦
+- 新增的指令请详见[指令book](CommandBook.md)
+- 降级mirai版本为2.14.0, 配合对应的[fix-protocol-version](https://github.com/cssxsh/fix-protocol-version)
+  解决部分登录问题(每个人bot风控情况可能不同,你也可以使用2.15m1的mirai 配合对应的fix-protocol,主要目标是解决问题就行)
 
 ### v1.4.1
 
