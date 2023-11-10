@@ -275,6 +275,66 @@ public class SqlLiteConfig {
                 ");");
         v3_0_1.setSqls(sql_3_0_1);
         result.add(v3_0_1);
+
+        // 车票监控信息
+        DBVersionTable v3_0_2 = new DBVersionTable();
+        v3_0_2.setVer(new Version("3.0.2"));
+        List<String> sql_3_0_2 = new ArrayList<>();
+        sql_3_0_2.add("DROP TABLE IF EXISTS ticket_attention");
+        sql_3_0_2.add("CREATE TABLE \"ticket_attention\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"date\" TEXT(1024),\n" +
+                " \"trainNo\" TEXT(1024),\n" +
+                " \"attentionQQId\" INTEGER\n" +
+                ");");
+        v3_0_2.setSqls(sql_3_0_2);
+        result.add(v3_0_2);
+
+        // 最近一次查询车票的结果
+        DBVersionTable v3_0_3 = new DBVersionTable();
+        v3_0_3.setVer(new Version("3.0.3"));
+        List<String> sql_3_0_3 = new ArrayList<>();
+        sql_3_0_3.add("DROP TABLE IF EXISTS last_train_ticket");
+        sql_3_0_3.add("CREATE TABLE \"train_ticket\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"date\" TEXT(1024),\n" +
+                " \"trainNo\" TEXT(1024),\n" +
+                " \"attentionQQId\" INTEGER\n" +
+                " \"hasTicket\" INTEGER\n" +
+                ");");
+        v3_0_3.setSqls(sql_3_0_3);
+        result.add(v3_0_3);
+
+        // 领取记录表
+        DBVersionTable v3_0_4 = new DBVersionTable();
+        v3_0_4.setVer(new Version("3.0.4"));
+        List<String> sql_3_0_4 = new ArrayList<>();
+        sql_3_0_4.add("DROP TABLE IF EXISTS activity_receive_record");
+        sql_3_0_4.add("CREATE TABLE \"activity_receive_record\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"date\" TEXT(1024),\n" +
+                " \"receiverId\" INTEGER,\n" +
+                " \"activityId\" INTEGER\n" +
+                ");");
+        v3_0_4.setSqls(sql_3_0_4);
+        result.add(v3_0_4);
+
+        // 活动配置表
+        DBVersionTable v3_0_5 = new DBVersionTable();
+        v3_0_5.setVer(new Version("3.0.5"));
+        List<String> sql_3_0_5 = new ArrayList<>();
+        sql_3_0_5.add("DROP TABLE IF EXISTS activity");
+        sql_3_0_5.add("CREATE TABLE \"activity\" (\n" +
+                " \"id\" INTEGER PRIMARY KEY,\n" +
+                " \"activityType\" TEXT(1024),\n" +
+                " \"activityRule\" TEXT(1024),\n" +
+                " \"awardRule\" TEXT(1024),\n" +
+                " \"startTime\" TEXT(128),\n" +
+                " \"endTime\" TEXT(128),\n" +
+                " \"enabled\" INTEGER\n" +
+                ");");
+        v3_0_5.setSqls(sql_3_0_5);
+        result.add(v3_0_5);
         
         return result;
     }

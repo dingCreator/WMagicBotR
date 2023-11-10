@@ -106,6 +106,35 @@ public class CommandEvents extends SimpleListenerHost {
     }
 
     /**
+     * 移除指令
+     *
+     * @param commands 指令
+     */
+    public void removeCommand(List<Command> commands) {
+        for (Command command : commands) {
+            List<String> keywords = new ArrayList<>();
+            keywords.add(command.properties().getName());
+            keywords.addAll(command.properties().getAlias());
+            for (String kw : keywords) {
+                removeCommand(kw);
+            }
+        }
+    }
+
+    public void removeCommandByKeyword(List<String> keywords) {
+        for (String kw : keywords) {
+            removeCommand(kw);
+        }
+    }
+
+    private void removeCommand(String kw) {
+        friendCommands.remove(kw);
+        groupCommands.remove(kw);
+        tempMsgCommands.remove(kw);
+        everywhereCommands.remove(kw);
+    }
+
+    /**
      * @Name: getArgs
      * @Description: 从消息体中获得 用空格分割的参数
      * @Param: msg
@@ -340,9 +369,9 @@ public class CommandEvents extends SimpleListenerHost {
                 }
                 if (result != null) {
                     event.getSubject().sendMessage(result);
+                    //事件拦截 防止公共消息事件再次处理
+                    event.intercept();
                 }
-                //事件拦截 防止公共消息事件再次处理
-                event.intercept();
             }
         } else {
             // 非指令 暂时不处理

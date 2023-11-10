@@ -390,6 +390,7 @@ public class LuckyRoleBattleCommand extends NoAuthCommand {
                 stack.push(strIndex);
             } else if (']' == str.charAt(strIndex) && stack.size() > 0) {
                 int prev = stack.pop();
+                // 这里是为了一个数字存两个下标，高32位存左下标，低32位存右下标
                 position[posIndex] = ((long) prev << 32) + strIndex;
                 posIndex++;
             }

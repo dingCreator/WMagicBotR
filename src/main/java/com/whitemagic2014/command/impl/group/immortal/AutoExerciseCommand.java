@@ -9,9 +9,12 @@ import com.whitemagic2014.command.impl.group.EmptyStringCommand;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
 import com.whitemagic2014.command.impl.group.immortal.util.CalBossUtil;
 import com.whitemagic2014.command.impl.group.immortal.util.DTO.FarmDTO;
+import com.whitemagic2014.command.impl.group.immortal.util.TimeUtil;
+import com.whitemagic2014.util.CommandThreadPoolUtil;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
 import com.whitemagic2014.util.MagicMd5;
+import com.whitemagic2014.util.NumberFormatUtil;
 import com.whitemagic2014.util.time.MagicPeriodTask;
 import com.whitemagic2014.util.time.MagicTaskObserver;
 import lombok.AllArgsConstructor;
@@ -62,6 +65,12 @@ public class AutoExerciseCommand extends OwnerCommand {
     private static final String UPGRADE_KEYWORD = "突破";
     private static final String NOW_ATTACK_BOSS_KEYWORD = "打boss";
     private static final String SEARCH_RANK_KEYWORD = "查询境界";
+    private static final String EXPLORE_KEYWORD = "秘境";
+
+    private static final String PREVIEW_KEYWORD = "查看";
+    private static final String ADD_KEYWORD1 = "增加";
+    private static final String ADD_KEYWORD2 = "新增";
+    private static final String DEL_KEYWORD = "删除";
 
     // 识别关键字
     private static final String AUTO_COLLECT_KEY = "autoCollect";
@@ -69,7 +78,8 @@ public class AutoExerciseCommand extends OwnerCommand {
     private static final String TASK_COMPLETED_KEYWORD = "今日无法再获取";
     private static final String DAILY_PERIOD_KEYWORD = "还没有宗门任务";
     private static final String NO_BOSS_KEYWORD = "本群尚未生成";
-    private static final String CANT_ATTACK_KEYWORD = "重伤";
+    private static final String CANT_ATTACK_KEYWORD1 = "重伤未愈";
+    private static final String CANT_ATTACK_KEYWORD2 = "重伤遁逃";
     private static final String NUMBER_KEYWORD = "编号";
     private static final String HAS_BOSS_KEYWORD = "Boss";
     private static final List<String> TASK_KEYWORD = Arrays.asList("灰尘", "罕见", "不要多问", "工厂", "耗材");
@@ -83,6 +93,7 @@ public class AutoExerciseCommand extends OwnerCommand {
     private static final String LAST_LEVEL_UP_TIME_KEYWORD = "修仙_上次突破时间";
     private static final String LAST_COLLECT_HERBS_TIME_KEYWORD = "修仙_前次收取药草时间";
     private static final String COLLECT_HERBS_PERIOD_KEYWORD = "修仙_收取药草间隔";
+    private static final String EXPLORE_GROUPS_KEYWORD = "修仙_秘境群号";
 
     /**
      * 容器
@@ -99,7 +110,8 @@ public class AutoExerciseCommand extends OwnerCommand {
             new WantedCommandKeyword(),
             new UpgradeCommandKeyword(),
             new NowAttackBossCommandKeyword(),
-            new SearchRankKeyword()
+            new SearchRankKeyword(),
+            new ExploreKeyword()
     );
 
     /**
@@ -127,30 +139,47 @@ public class AutoExerciseCommand extends OwnerCommand {
     /**
      * 是否有正在进行的日常周期任务
      */
-    private static boolean hasDailyPeriod;
+    private boolean hasDailyPeriod;
     /**
      * 上次攻击boss时间
      */
-    private static long attackStartTimeMillis;
+    private long attackStartTimeMillis;
     /**
      * 上次完成宗门任务的时间
      */
-    private static final AtomicLong COMPLETE_TASK_TIME_MILLIS = new AtomicLong(0);
+    private final AtomicLong COMPLETE_TASK_TIME_MILLIS = new AtomicLong(0);
     /**
      * 宗门任务完成次数
      */
-    private static final AtomicInteger COMPLETE_TASK_TIMES = new AtomicInteger(0);
+    private final AtomicInteger COMPLETE_TASK_TIMES = new AtomicInteger(0);
     /**
      * 是否是需要刷新
      */
-    private static final AtomicBoolean NEED_REFRESH = new AtomicBoolean(false);
+    private final AtomicBoolean NEED_REFRESH = new AtomicBoolean(false);
+    /**
+     * 上次探索秘境时间
+     */
+    private long lastExploreTimeMillis;
+    /**
+     * 探索所需时间
+     */
+    private int exploreTime;
+    /**
+     * 是否正在探索秘境
+     */
+    private boolean exploring;
+    /**
+     * 是否在处理秘境过程中
+     */
+    private AtomicBoolean doingExplore = new AtomicBoolean(false);
 
     private static final Random RANDOM = new Random();
 
     @Autowired
     private GlobalParam globalParam;
 
-    private Bot bot;
+    @Autowired
+    private CommandThreadPoolUtil commandThreadPoolUtil;
 
     @Override
     public CommandProperties properties() {
@@ -228,7 +257,7 @@ public class AutoExerciseCommand extends OwnerCommand {
     /**
      * 切换修炼模式指令
      */
-    private static class SwitchCommandKeyword implements ICommandKeyword {
+    private class SwitchCommandKeyword implements ICommandKeyword {
 
         @Override
         public boolean support(String keyword) {
@@ -249,6 +278,9 @@ public class AutoExerciseCommand extends OwnerCommand {
             } else if ("2".equals(args.get(0))) {
                 SettingsCache.getInstance().setSettings(MODE_KEYWORD, 2);
                 return new PlainText("模式切换为 打boss");
+            } else if ("3".equals(args.get(0))) {
+                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 3);
+                return new PlainText("模式切换为 秘境");
             }
             return new PlainText("错误的模式");
         }
@@ -257,7 +289,7 @@ public class AutoExerciseCommand extends OwnerCommand {
     /**
      * 查看状态指令
      */
-    private static class StatusCommandKeyword implements ICommandKeyword {
+    private class StatusCommandKeyword implements ICommandKeyword {
 
         @Override
         public boolean support(String keyword) {
@@ -279,6 +311,11 @@ public class AutoExerciseCommand extends OwnerCommand {
                     break;
                 case 2:
                     stringBuilder.append("打boss");
+                    break;
+                case 3:
+                    stringBuilder.append("秘境");
+                    stringBuilder.append("\n进入时间 ").append(new Date(lastExploreTimeMillis));
+                    stringBuilder.append("\n持续时间 ").append(exploreTime).append("分钟");
                     break;
                 default:
                     stringBuilder.append("错误的模式");
@@ -329,7 +366,7 @@ public class AutoExerciseCommand extends OwnerCommand {
         public Message execute(String keyword, List<String> args) {
             registerTask();
 
-            bot = MagicBotR.getBot();
+            Bot bot = MagicBotR.getBot();
             bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("修仙签到"));
             bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("宗门丹药领取"));
 
@@ -354,7 +391,7 @@ public class AutoExerciseCommand extends OwnerCommand {
     /**
      * 自动接取悬赏令指令
      */
-    private static class WantedCommandKeyword implements ICommandKeyword {
+    private class WantedCommandKeyword implements ICommandKeyword {
 
         @Override
         public boolean support(String keyword) {
@@ -381,7 +418,7 @@ public class AutoExerciseCommand extends OwnerCommand {
     /**
      * 突破模式指令
      */
-    private static class UpgradeCommandKeyword implements ICommandKeyword {
+    private class UpgradeCommandKeyword implements ICommandKeyword {
 
         @Override
         public boolean support(String keyword) {
@@ -440,23 +477,9 @@ public class AutoExerciseCommand extends OwnerCommand {
     }
 
     /**
-     * 获取收菜群号
-     *
-     * @return 群号
-     */
-    private List<Long> getCollectGroupIds() {
-        List<FarmDTO> list = SettingsCache.getInstance().getSettings(FarmDTO.SETTINGS_KEYWORD, str ->
-                        JSONObject.parseArray(str, FarmDTO.class));
-        if (CollectionUtils.isEmpty(list)) {
-            return new ArrayList<>();
-        }
-        return list.stream().map(FarmDTO::getGroupId).collect(Collectors.toList());
-    }
-
-    /**
      * 文字等级对应数字等级
      */
-    private static class SearchRankKeyword implements ICommandKeyword {
+    private class SearchRankKeyword implements ICommandKeyword {
 
         @Override
         public boolean support(String keyword) {
@@ -468,6 +491,112 @@ public class AutoExerciseCommand extends OwnerCommand {
             String str = CollectionUtils.isEmpty(args) ? "" : args.get(0);
             return new PlainText("等级对应的数字为：" + CalBossUtil.getRank(str));
         }
+    }
+
+    /**
+     * 探索秘境关键字
+     */
+    private class ExploreKeyword implements ICommandKeyword {
+
+        @Override
+        public boolean support(String keyword) {
+            return keyword.equals(EXPLORE_KEYWORD);
+        }
+
+        @Override
+        public Message execute(String keyword, List<String> args) {
+            if (CollectionUtils.isEmpty(args)) {
+                return new PlainText("格式错误");
+            }
+
+            switch (args.get(0)) {
+                case PREVIEW_KEYWORD:
+                    String config = SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD, preview -> {
+                        List<Long> list = JSONObject.parseArray(preview, Long.class);
+                        if (CollectionUtils.isEmpty(list)) {
+                            return "";
+                        }
+                        StringBuilder builder = new StringBuilder("编号|群号");
+                        int i = 1;
+                        for (Long groupId : list) {
+                            builder.append("\n").append(i).append("|").append(groupId);
+                            i++;
+                        }
+                        return builder.toString();
+                    });
+                    return StringUtils.isEmpty(config) ? new PlainText("当前没有配置") : new PlainText(config);
+                case ADD_KEYWORD1:
+                case ADD_KEYWORD2:
+                    if (args.size() <= 1) {
+                        return new PlainText("请输入群号");
+                    }
+                    long groupId;
+                    try {
+                        groupId = Long.parseLong(args.get(1));
+                    } catch (Exception e) {
+                        return new PlainText("输入的群号非数字");
+                    }
+
+                    Bot bot = MagicBotR.getBot();
+                    Group group = bot.getGroups().stream().filter(g -> g.getId() == groupId).findFirst().orElse(null);
+                    if (group == null) {
+                        return new PlainText(globalParam.botNick + "没有加入该群");
+                    }
+
+                    String str = SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD);
+                    List<Long> list;
+                    if (StringUtils.isEmpty(str)) {
+                        list = new ArrayList<>();
+                    } else {
+                        list = JSONObject.parseArray(str, Long.class);
+                    }
+                    if (list.stream().anyMatch(g -> g.equals(groupId))) {
+                        return new PlainText("该配置已存在");
+                    }
+                    list.add(groupId);
+                    SettingsCache.getInstance().setSettings(EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(list));
+                    return new PlainText("增加成功");
+                case DEL_KEYWORD:
+                    if (args.size() <= 1) {
+                        return new PlainText("请输入编号");
+                    }
+                    // 解析编号
+                    List<Integer> nums = NumberFormatUtil.analyseNum(args.get(1));
+                    if (CollectionUtils.isEmpty(nums)) {
+                        return new PlainText("所有的编号均非法");
+                    }
+
+                    List<Long> groupList = SettingsCache.getInstance()
+                            .getSettings(EXPLORE_GROUPS_KEYWORD, g -> JSONObject.parseArray(g, Long.class));
+                    List<Integer> sortedNums = nums.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+                    int count = 0;
+                    for (int num : sortedNums) {
+                        if (num <= groupList.size() && num > 0) {
+                            groupList.remove(num - 1);
+                            count++;
+                        }
+                    }
+                    SettingsCache.getInstance().setSettings(EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(groupList));
+                    return new PlainText("成功删除【" + count + "】条配置");
+                default:
+                    break;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 获取收菜群号
+     *
+     * @return 群号
+     */
+    private List<Long> getCollectGroupIds() {
+        List<FarmDTO> list = SettingsCache.getInstance().getSettings(FarmDTO.SETTINGS_KEYWORD, str ->
+                JSONObject.parseArray(str, FarmDTO.class));
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        return list.stream().map(FarmDTO::getGroupId).collect(Collectors.toList());
     }
 
     /**
@@ -485,13 +614,13 @@ public class AutoExerciseCommand extends OwnerCommand {
      * 开始自动修仙
      */
     public void startAuto() {
-        bot = MagicBotR.getBot();
+        Bot bot = MagicBotR.getBot();
         bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
         // 定时闭关出关
         String key = MagicMd5.getMd5String("exercise-inOut");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
-            waitRandomMillis(1000, 3000);
+            waitRandomMillis(1000, 2000);
             switch (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0)) {
                 case 0:
                     return;
@@ -510,6 +639,30 @@ public class AutoExerciseCommand extends OwnerCommand {
                             + 2 * SettingsCache.getInstance().getSettingsAsInt(ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000) {
                         attackAllBoss(getCollectGroupIds());
                         attackStartTimeMillis = System.currentTimeMillis();
+                    }
+                    break;
+                case 3:
+                    if (doingExplore.get()) {
+                        break;
+                    }
+
+                    if (System.currentTimeMillis() >= lastExploreTimeMillis + exploreTime * 60 * 1000 + 60 * 1000) {
+                        if (exploring) {
+                            bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("秘境结算"));
+                            TimeUtil.waitRandomMillis(10 * 1000, 0);
+                            exploring = false;
+                        } else {
+                            registerExplore();
+                            doingExplore.set(true);
+
+                            bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵石出关"));
+                            commandThreadPoolUtil.addGroupTask(new PlainText("探索秘境"),
+                                    JSONObject.parseArray(SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD), Long.class),
+                                    botR -> {
+                                        botR.getGroupOrFail(mainGroupId).sendMessage(new PlainText("秘境结算"));
+                                        doingExplore.set(false);
+                                    });
+                        }
                     }
                     break;
                 default:
@@ -531,10 +684,12 @@ public class AutoExerciseCommand extends OwnerCommand {
                 } else {
                     bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("渡劫境悬赏令"));
                 }
+                registerWanted();
             } else if (System.currentTimeMillis() > WantedCommand.wantedEndTimeMillis + 10000L) {
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("渡劫境悬赏令结算"));
                 WantedCommand.wanted = false;
                 WantedCommand.wantedEndTimeMillis = 0;
+                bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
             }
         }).schedule(WANTED_DELAY, WANTED_PERIOD);
 
@@ -572,8 +727,6 @@ public class AutoExerciseCommand extends OwnerCommand {
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵田收取"));
             }
         }).schedule(COLLECT_HERBS_DELAY, COLLECT_HERBS_PERIOD);
-
-        registerWanted();
     }
 
     /**
@@ -594,7 +747,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             return;
         }
 
-        bot = MagicBotR.getBot();
+        Bot bot = MagicBotR.getBot();
         Map<Long, GroupBossStatus> bossMap = initBossMap(groupIds);
         GROUP_BOSS_MAP.clear();
         GROUP_BOSS_MAP.putAll(bossMap);
@@ -631,7 +784,11 @@ public class AutoExerciseCommand extends OwnerCommand {
      * 自动打boss逻辑
      */
     private void registerCollect() {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice, atMe) -> {
+            if (!atMe) {
+                return null;
+            }
+
             if (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0) != 2) {
                 return null;
             }
@@ -646,6 +803,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             long gId = sender.getGroup().getId();
 
             waitRandomMillis(500, 1000);
+            Bot bot = MagicBotR.getBot();
             if (notice.contains(NO_BOSS_KEYWORD)) {
                 // 没有boss了
                 GROUP_BOSS_MAP.get(gId).setBossAllDefeated(true);
@@ -678,7 +836,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                     bot.getGroupOrFail(gId).sendMessage(new PlainText("讨伐世界BOSS" + bossIndex.pop()));
                     waitRandomMillis(ATTACK_BOSS_PERIOD, 2000);
                 }
-            } else if (notice.contains(CANT_ATTACK_KEYWORD)) {
+            } else if (notice.contains(CANT_ATTACK_KEYWORD1) || notice.contains(CANT_ATTACK_KEYWORD2)) {
                 // 重伤
                 CONTINUE_ATTACK.set(false);
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("讨伐【" + sender.getGroup().getName() + "】boss失败"));
@@ -693,56 +851,61 @@ public class AutoExerciseCommand extends OwnerCommand {
      */
     private void registerWanted() {
         // 悬赏令
-        EmptyStringCommand.addLogic(((sender, args, messageChain, subject, notice) -> {
-            if (WantedCommand.wanted) {
+        EmptyStringCommand.addLogic(((sender, args, messageChain, subject, notice, atMe) -> {
+            if (!atMe || WantedCommand.wanted || notice == null || !notice.contains("个人悬赏令")) {
                 return null;
             }
-            if (notice == null || !notice.contains("个人悬赏令")) {
-                return null;
-            }
+
+            removeWanted();
             String[] notices = notice.split("!");
+            if (notices.length == 1) {
+                notices = notice.split("！");
+            }
 
             Bot bot = MagicBotR.getBot();
             if (notices.length != 4 && needAward(notice)) {
                 bot.getGroupOrFail(sender.getGroup().getId()).sendMessage(new At(globalParam.ownerId).plus("识别悬赏令失败"));
             } else {
-                try {
-                    for (int i = 0; i < 3; i++) {
-                        if (needAward(notices[i].trim().replace(" ", ""))) {
-                            String[] sentences = notices[i].split(",");
-                            for (String sentence : sentences) {
-                                if (sentence.startsWith("预计需")) {
-                                    String minuteStr = sentence.replace("预计需", "").replace("分钟", "").trim();
-                                    try {
-                                        WantedCommand.wantedEndTimeMillis = System.currentTimeMillis()
-                                                + Long.parseLong(minuteStr) * 60 * 1000L;
-                                        WantedCommand.wanted = true;
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        bot.getGroupOrFail(sender.getGroup().getId())
-                                                .sendMessage(new At(globalParam.ownerId).plus("接取悬赏令失败，识别时间失败"));
-                                    }
+                for (int i = 0; i < 3; i++) {
+                    if (needAward(notices[i].trim().replace(" ", ""))) {
+                        String[] sentences = notices[i].split(",");
+                        for (String sentence : sentences) {
+                            if (sentence.contains("，")) {
+                                sentence = sentence.split("，")[0];
+                            }
+                            if (sentence.startsWith("预计需")) {
+                                String minuteStr = sentence.replace("预计需", "").replace("分钟", "").trim();
+                                try {
+                                    WantedCommand.wantedEndTimeMillis = System.currentTimeMillis()
+                                            + Long.parseLong(minuteStr) * 60 * 1000L;
+                                    WantedCommand.wanted = true;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    bot.getGroupOrFail(sender.getGroup().getId())
+                                            .sendMessage(new At(globalParam.ownerId).plus("接取悬赏令失败，识别时间失败"));
                                 }
                             }
-                            if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
-                                return new PlainText("悬赏令接取" + (i + 1));
-                            } else {
-                                return new PlainText("渡劫境悬赏令接取" + (i + 1));
-                            }
+                        }
+                        if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
+                            return new PlainText("悬赏令接取" + (i + 1));
+                        } else {
+                            return new PlainText("渡劫境悬赏令接取" + (i + 1));
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
 
                 if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
-                    if (RANDOM.nextInt(100) < 50) {
+                    if (RANDOM.nextInt(100) < 30) {
                         return new PlainText("悬赏令刷新");
                     }
                 }
             }
             return new PlainText("闭关");
         }), "AutoExerciseCommand");
+    }
+
+    private void removeWanted() {
+        EmptyStringCommand.removeLogic("AutoExerciseCommand");
     }
 
     /**
@@ -762,7 +925,10 @@ public class AutoExerciseCommand extends OwnerCommand {
      * 宗门任务处理逻辑
      */
     private void registerTask() {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice, atMe) -> {
+            if (!atMe) {
+                return null;
+            }
             if (notice == null) {
                 return null;
             }
@@ -786,6 +952,50 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
             return null;
         }, "AutoTaskCommand");
+    }
+
+    private void registerExplore() {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text, atMe) -> {
+            if (!atMe) {
+                return null;
+            }
+
+            String[] contents = text.split("，");
+            if (contents.length < 2) {
+                contents = text.split(",");
+            }
+            if (contents.length < 2 || !contents[1].contains("预计")) {
+                removeExplore();
+                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 2);
+
+                Bot bot = MagicBotR.getBot();
+                bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
+                doingExplore.set(false);
+                return new PlainText("当前无法探索秘境，已切换模式为打boss");
+            }
+
+            String minStr = contents[1].replace("预计", "").replace("分钟后可结束", "").trim();
+            int minute;
+            try {
+                minute = Integer.parseInt(minStr);
+            } catch (Exception e) {
+                removeExplore();
+                doingExplore.set(false);
+                return new At(globalParam.ownerId).plus("秘境时间识别失败");
+            }
+
+
+            removeExplore();
+            exploreTime = minute;
+            lastExploreTimeMillis = System.currentTimeMillis();
+            exploring = true;
+            doingExplore.set(false);
+            return new PlainText("识别秘境时间完毕");
+        }, "AutoExplore");
+    }
+
+    private void removeExplore() {
+        EmptyStringCommand.removeLogic("AutoExplore");
     }
 
     /**
@@ -864,7 +1074,7 @@ public class AutoExerciseCommand extends OwnerCommand {
         private Long groupId;
         private Boolean bossAllDefeated;
 
-        GroupBossStatus(Long groupId) {
+        public GroupBossStatus(Long groupId) {
             this.groupId = groupId;
             this.bossAllDefeated = false;
         }

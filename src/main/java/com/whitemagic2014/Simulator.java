@@ -1,12 +1,18 @@
 package com.whitemagic2014;
 
+import cn.hutool.extra.spring.SpringUtil;
 import com.whitemagic2014.annotate.AnnotateAnalyzer;
+import com.whitemagic2014.command.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.config.properties.SwitchProperties;
 import com.whitemagic2014.db.DBInitHelper;
 import com.whitemagic2014.db.DBVersion;
 import com.whitemagic2014.events.CommandEvents;
+import com.whitemagic2014.pojo.Activity;
+import com.whitemagic2014.service.ActivityService;
 import com.whitemagic2014.service.RemindService;
+import com.whitemagic2014.util.ActivityManagerUtil;
+import com.whitemagic2014.util.spring.SpringApplicationContextUtil;
 import net.mamoe.mirai.event.ListenerHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import xyz.cssxsh.mirai.tool.FixProtocolVersion;
 import xyz.cssxsh.mirai.tool.KFCFactory;
 
@@ -56,6 +63,9 @@ public class Simulator implements ApplicationRunner {
     @Autowired
     AnnotateAnalyzer annotateAnalyzer;
 
+    @Autowired
+    private ActivityManagerUtil activityManagerUtil;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         logger.info("bot版本: " + version);
@@ -67,8 +77,13 @@ public class Simulator implements ApplicationRunner {
         SwitchProperties.updateSwitchByProperty();
         // 指令事件 实例化后加入事件列表
         CommandEvents commandEvents = new CommandEvents();
+        SpringUtil.registerBean("CommandEvents", commandEvents);
         commandEvents.registerCommandHeads("#", "$", "!", "！", "");
         commandEvents.registerCommands(annotateAnalyzer.getCommands());
+        List<Command> activityCommand = activityManagerUtil.initActivityCommand();
+        if (!CollectionUtils.isEmpty(activityCommand)) {
+            commandEvents.registerCommands(activityCommand);
+        }
         events.add(commandEvents);
         // 读取备忘数据
         remindService.loadTask();

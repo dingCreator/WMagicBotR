@@ -2,7 +2,10 @@ package com.whitemagic2014.config;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,9 +40,18 @@ public class RestTemplateConfig {
     private int readTimeout; // 读取超时默认30s
 
     private ClientHttpRequestFactory createFactory() {
-
-        HttpClient httpClient = HttpClientBuilder.create().setMaxConnTotal(this.maxTotalConnect)
-                .setMaxConnPerRoute(this.maxConnectPerRoute).build();
+        HttpClient httpClient;
+        try {
+            httpClient = HttpClientBuilder.create()
+                    .setMaxConnTotal(this.maxTotalConnect)
+                    .setMaxConnPerRoute(this.maxConnectPerRoute)
+                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                    .setSSLContext(new SSLContextBuilder().loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build())
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("create rest template failed", e);
+        }
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
         factory.setConnectTimeout(this.connectTimeout);
         factory.setReadTimeout(this.readTimeout);

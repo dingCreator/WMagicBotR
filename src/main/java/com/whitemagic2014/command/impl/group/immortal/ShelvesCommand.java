@@ -96,7 +96,7 @@ public class ShelvesCommand extends OwnerCommand {
     }
 
     private void addUpperEmptyStringLogic(int price, String keyword, long groupId) {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text, atMe) -> {
             if (groupId != sender.getGroup().getId() || messageChain.stream()
                     .filter(ForwardMessage.class::isInstance).findFirst().orElse(null) == null) {
                 return null;
@@ -161,7 +161,7 @@ public class ShelvesCommand extends OwnerCommand {
     }
 
     private void addDownEmptyStringLogic(long groupId) {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text, atMe) -> {
             if (groupId != sender.getGroup().getId() || messageChain.stream()
                     .filter(ForwardMessage.class::isInstance).findFirst().orElse(null) == null) {
                 return null;

@@ -11,6 +11,7 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.PlainText;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class RemindOthersCommand extends NoAuthCommand {
     }
 
     private void addEmptyStringLogic() {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text, atMe) -> {
             long groupId = sender.getGroup().getId();
             long senderId = sender.getId();
             if (REMIND_BODY_MAP.containsKey(senderId) && REMIND_BODY_MAP.get(senderId).containsKey(groupId)) {

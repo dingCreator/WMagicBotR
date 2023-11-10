@@ -155,7 +155,7 @@ public abstract class BaseGroupCommand implements GroupCommand {
     }
 
     /**
-     * @Name: makeAts
+     * @Name: makeAt
      * @Description: 组成at消息链
      * @Param: uids  用户qq号
      * @Param: subject

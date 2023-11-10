@@ -4,6 +4,7 @@ import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.command.impl.group.EmptyStringCommand;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
+import com.whitemagic2014.command.impl.group.immortal.util.TimeUtil;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
 import net.mamoe.mirai.Bot;
@@ -18,11 +19,13 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 一键上下架
- * 此处严厉批判修仙不人道的上下架系统
+ * 一键上架
  *
  * @author ding
  * @date 2023/3/19
@@ -35,6 +38,10 @@ public class ShelvesUpCommand extends OwnerCommand {
      * 是否处于上架模式
      */
     private static volatile boolean upper = false;
+
+    private final Set<String> EXCLUDES = new HashSet<>(Arrays.asList("神秘环奈的大宝剑", "神秘环奈的烤火炉",
+            "太元真丹", "鬼面炼心丹", "九阳真丹", "归藏灵丹", "天命血凝丹" ,"固元丹", "养元丹", "生骨丹", "冰心丹", "渡厄丹", "天命炼心丹",
+            "化瘀丹", "黄龙丹", "明心丹", "回春丹", "少阴清灵丹"));
 
     @Autowired
     private GlobalParam globalParam;
@@ -63,7 +70,7 @@ public class ShelvesUpCommand extends OwnerCommand {
     }
 
     private void addUpperEmptyStringLogic(int price, String keyword, long groupId) {
-        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text) -> {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, text, atMe) -> {
             if (groupId != sender.getGroup().getId() || messageChain.stream()
                     .filter(ForwardMessage.class::isInstance).findFirst().orElse(null) == null) {
                 return null;
@@ -110,14 +117,12 @@ public class ShelvesUpCommand extends OwnerCommand {
                         }
                     }
 
-                    if (!StringUtils.isEmpty(name) && count > 0) {
-                        for (int i = 0; i < count; i++) {
-                            bot.getGroupOrFail(groupId).sendMessage(new PlainText("坊市上架" + name + " " + price));
-                            try {
-                                Thread.sleep(10000);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                    if (!StringUtils.isEmpty(name) && count > 0 && !EXCLUDES.contains(name)) {
+                        bot.getGroupOrFail(groupId).sendMessage(new PlainText("坊市上架" + name + " " + price + " " + count));
+                        try {
+                            TimeUtil.waitRandomMillis(5000, 3000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 });

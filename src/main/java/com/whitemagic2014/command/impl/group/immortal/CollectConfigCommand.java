@@ -9,6 +9,7 @@ import com.whitemagic2014.command.impl.group.immortal.util.CalBossUtil;
 import com.whitemagic2014.command.impl.group.immortal.util.DTO.FarmDTO;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
+import com.whitemagic2014.util.NumberFormatUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -111,7 +112,7 @@ public class CollectConfigCommand extends NoAuthCommand {
                 return new PlainText("请输入编号");
             }
             // 解析编号
-            List<Integer> nums = analyseNum(args.get(1));
+            List<Integer> nums = NumberFormatUtil.analyseNum(args.get(1));
             if (CollectionUtils.isEmpty(nums)) {
                 return new PlainText("所有的编号均非法");
             }
@@ -129,49 +130,56 @@ public class CollectConfigCommand extends NoAuthCommand {
             SettingsCache.getInstance().setSettings(FarmDTO.SETTINGS_KEYWORD, JSONObject.toJSONString(list));
             return new PlainText("成功删除【" + count + "】条配置");
         } else if (EDIT_KEYWORD1.equals(args.get(0)) || EDIT_KEYWORD2.equals(args.get(0))) {
-            if (args.size() < 3) {
-                return new PlainText("请输入编号和打boss等级上限（含）");
-            }
-            // 解析境界
-            int rank = CalBossUtil.getRank(args.get(2));
-            if (rank == 0) {
-                return new PlainText("输入的境界有误");
+            if (args.size() == 1) {
+                return new PlainText("请输入编号");
             }
             // 解析编号
-            List<Integer> nums = analyseNum(args.get(1));
+            List<Integer> nums = NumberFormatUtil.analyseNum(args.get(1));
             if (CollectionUtils.isEmpty(nums)) {
                 return new PlainText("所有的编号均非法");
             }
+
             String str = SettingsCache.getInstance().getSettings(FarmDTO.SETTINGS_KEYWORD);
             List<FarmDTO> list = JSONObject.parseArray(str, FarmDTO.class);
-            int count = 0;
 
+            boolean changeRank = args.size() > 2;
+            int rank = 1;
+            if (changeRank) {
+                // 解析境界
+                rank = CalBossUtil.getRank(args.get(2));
+                if (rank == 0) {
+                    return new PlainText("输入的境界有误");
+                }
+            }
+
+            int count = 0;
+            Bot bot = MagicBotR.getBot();
+            StringBuilder errMsgBuilder = new StringBuilder();
             for (int num : nums) {
                 if (num <= list.size() && num > 0) {
-                    list.set(num - 1, new FarmDTO(
-                            list.get(num - 1).getGroupId(),
-                            list.get(num - 1).getGroupName(),
-                            rank, args.get(2)));
+                    long groupId = list.get(num - 1).getGroupId();
+                    Group group = bot.getGroups().stream().filter(g -> g.getId() == groupId).findFirst().orElse(null);
+                    if (group == null) {
+                        errMsgBuilder.append("群号为【")
+                                .append(groupId)
+                                .append("】的群已退出或已解散，请删除配置")
+                                .append("\n");
+                        continue;
+                    }
+                    rank = changeRank ? rank : list.get(num - 1).getRank();
+                    String rankName = CalBossUtil.getRankStr(rank);
+                    list.set(num - 1, new FarmDTO(groupId, group.getName(), rank, rankName));
                     count++;
                 }
             }
             SettingsCache.getInstance().setSettings(FarmDTO.SETTINGS_KEYWORD, JSONObject.toJSONString(list));
-            return new PlainText("成功编辑【" + count +"】条配置");
+            String errMsg = errMsgBuilder.toString();
+            if (!StringUtils.isEmpty(errMsg)) {
+                bot.getGroupOrFail(sender.getGroup().getId()).sendMessage(new PlainText(errMsg));
+            }
+            return new PlainText("成功编辑【" + count + "】条配置");
         }
         return new PlainText(FORMAT_INFO);
-    }
-
-    private List<Integer> analyseNum(String str) {
-        List<Integer> nums = new ArrayList<>();
-        String numsStr = str.replace("，", ",");
-        for (String numStr : numsStr.split(",")) {
-            try {
-                nums.add(Integer.parseInt(numStr));
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-        return nums;
     }
 
     @Override

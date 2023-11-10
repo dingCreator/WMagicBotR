@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
-import com.whitemagic2014.command.impl.group.immortal.util.TimeUtil;
+import com.whitemagic2014.util.CommandThreadPoolUtil;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +30,9 @@ public class BatchUseCommand extends OwnerCommand {
     @Autowired
     private GlobalParam globalParam;
 
+    @Autowired
+    private CommandThreadPoolUtil commandThreadPoolUtil;
+
     @Override
     protected Message executeHandle(Member sender, ArrayList<String> args, MessageChain messageChain, Group subject) throws Exception {
         if (CollectionUtils.isEmpty(args)) {
@@ -46,16 +49,18 @@ public class BatchUseCommand extends OwnerCommand {
                 e.printStackTrace();
             }
         }
-        if (count > 10) {
-            count = 10;
+        if (count > 100) {
+            count = 100;
         }
+
+        List<Message> messageList = new ArrayList<Message>(count * list.size());
         for (int i = 0; i < count; i++) {
             for (String article : list) {
-                bot.getGroupOrFail(sender.getGroup().getId()).sendMessage(new PlainText("使用 " + article));
-                TimeUtil.waitRandomMillis(7000, 5000);
+                messageList.add(new PlainText("使用 " + article));
             }
         }
-        return new PlainText("完成使用");
+        commandThreadPoolUtil.addGroupTask(messageList, sender.getGroup().getId());
+        return new PlainText("开始使用");
     }
 
     @Override

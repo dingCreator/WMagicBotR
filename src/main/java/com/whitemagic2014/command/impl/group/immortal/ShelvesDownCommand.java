@@ -4,6 +4,7 @@ import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.bot.MagicBotR;
 import com.whitemagic2014.command.impl.group.EmptyStringCommand;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
+import com.whitemagic2014.command.impl.group.immortal.util.TimeUtil;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
 import net.mamoe.mirai.Bot;
@@ -52,7 +53,7 @@ public class ShelvesDownCommand extends OwnerCommand {
 
             for (int i = startIndex; i >= endIndex; i--) {
                 bot.getGroupOrFail(sender.getGroup().getId()).sendMessage("坊市下架" + i);
-                Thread.sleep(10000);
+                TimeUtil.waitRandomMillis(5000, 3000);
             }
         } catch (Exception e) {
             System.out.println("数字解析失败");

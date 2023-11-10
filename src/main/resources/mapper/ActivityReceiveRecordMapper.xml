@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whitemagic2014.dao.ActivityReceiveRecordDao">
+    <insert id="insert" parameterType="com.whitemagic2014.pojo.ActivityReceiveRecord">
+        insert into `activity_receive_record`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="date != null">
+                `date`,
+            </if>
+            <if test="receiverId != null">
+                receiverId,
+            </if>
+            <if test="activityId != null">
+                activityId,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="date != null">
+                #{date},
+            </if>
+            <if test="receiverId != null">
+                #{receiverId},
+            </if>
+            <if test="activityId != null">
+                #{activityId},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="getOne" resultType="com.whitemagic2014.pojo.ActivityReceiveRecord">
+        SELECT * from activity_receive_record
+        WHERE `date`=#{date} AND receiverId=#{receiverId} AND activityId=#{activityId}
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Integer" >
+        SELECT COUNT(1) FROM activity_receive_record
+        <where>
+            <if test="date != null">
+                AND `date` like #{date}||'%'
+            </if>
+            <if test="receiverId != null">
+                AND `receiverId`=#{receiverId}
+            </if>
+            <if test="activityId != null">
+                AND `activityId`=#{activityId}
+            </if>
+        </where>
+    </select>
+</mapper>

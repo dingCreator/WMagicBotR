@@ -9,7 +9,6 @@
         <version>2.3.1.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-
     <groupId>com.whitemagic2014</groupId>
     <artifactId>WMagicBotR</artifactId>
     <version>1.7.2</version>
@@ -119,38 +118,25 @@
 
         <dependency>
             <groupId>net.mamoe</groupId>
-<<<<<<< HEAD
-            <artifactId>mirai-core-jvm</artifactId>
-            <version>2.15.0-dev-98</version>
-=======
             <artifactId>mirai-core-all</artifactId>
             <version>2.15.0</version>
             <scope>provided</scope>
->>>>>>> e345c22c0ce26d2dc100bd4def09a73efa6d2988
         </dependency>
 
         <!--  https://github.com/WhiteMagic2014/gpt-magic-plus  -->
         <dependency>
-<<<<<<< HEAD
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
-=======
+        </dependency>
+
+        <dependency>
             <groupId>io.github.whitemagic2014</groupId>
             <artifactId>gpt-magic-plus</artifactId>
             <version>1.2.0</version>
->>>>>>> e345c22c0ce26d2dc100bd4def09a73efa6d2988
         </dependency>
 
         <!-- 临时修复 https://github.com/cssxsh/fix-protocol-version -->
-        <dependency>
-            <groupId>com.github.cssxsh</groupId>
-            <artifactId>fix-protocol-version</artifactId>
-<<<<<<< HEAD
-            <version>1.7.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/fix-protocol-version-1.7.1.mirai2.jar</systemPath>
-        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -159,11 +145,20 @@
         </dependency>
 
         <dependency>
+            <groupId>io.github.whitemagic2014</groupId>
+            <artifactId>gpt-magic-plus</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.18</version>
         </dependency>
-=======
+
+        <dependency>
+            <groupId>com.github.cssxsh</groupId>
+            <artifactId>fix-protocol-version</artifactId>
             <version>1.9.4</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/fix-protocol-version-1.9.4.mirai2.jar</systemPath>
@@ -174,8 +169,6 @@
             <artifactId>async-http-client</artifactId>
             <version>2.12.3</version>
         </dependency>
-
->>>>>>> e345c22c0ce26d2dc100bd4def09a73efa6d2988
     </dependencies>
 
     <build>

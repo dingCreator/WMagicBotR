@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whitemagic2014.dao.ActivityDao">
+    <insert id="createActivity" parameterType="com.whitemagic2014.pojo.Activity">
+        insert into `activity`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="activityType != null">
+                `activityType`,
+            </if>
+            <if test="activityRule != null">
+                activityRule,
+            </if>
+            <if test="awardRule != null">
+                awardRule,
+            </if>
+            <if test="startTime != null">
+                startTime,
+            </if>
+            <if test="endTime != null">
+                endTime,
+            </if>
+            <if test="enabled != null">
+                enabled
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="activityType != null">
+                #{activityType},
+            </if>
+            <if test="activityRule != null">
+                #{activityRule},
+            </if>
+            <if test="awardRule != null">
+                #{awardRule},
+            </if>
+            <if test="startTime != null">
+                #{startTime},
+            </if>
+            <if test="endTime != null">
+                #{endTime},
+            </if>
+            <if test="enabled != null">
+                #{enabled}
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateById" parameterType="com.whitemagic2014.pojo.Activity">
+        UPDATE `activity` SET
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test=""></if>
+        </trim>
+        WHERE id=#{}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM `activity` WHERE id=#{activityId}
+    </delete>
+
+    <select id="getById" parameterType="java.lang.Long" resultType="com.whitemagic2014.pojo.Activity">
+        SELECT * FROM `activity` WHERE id=#{activityId}
+    </select>
+
+    <select id="queryActivityList" resultType="com.whitemagic2014.pojo.Activity">
+        SELECT * FROM `activity`
+    </select>
+
+    <select id="queryActivity" resultType="com.whitemagic2014.pojo.Activity">
+        SELECT * FROM `activity` WHERE activityType=#{activityType}
+    </select>
+</mapper>

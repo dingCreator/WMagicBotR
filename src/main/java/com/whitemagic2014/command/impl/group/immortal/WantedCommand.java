@@ -4,12 +4,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.cache.SettingsCache;
 import com.whitemagic2014.command.impl.group.NoAuthCommand;
+import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.PlainText;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -36,10 +38,13 @@ public class WantedCommand extends NoAuthCommand {
      */
     static long wantedEndTimeMillis;
 
+    @Autowired
+    private GlobalParam globalParam;
+
     @Override
     protected Message executeHandle(Member sender, ArrayList<String> args, MessageChain messageChain, Group subject) throws Exception {
         if (CollectionUtils.isEmpty(args)) {
-            return new PlainText("格式：初音悬赏令 {增加/删除/查看} [关键词]\n参数1必填，参数2在增加/删除时必填，注意空格");
+            return new PlainText("格式：" + globalParam.botName + "悬赏令 {增加/删除/查看} [关键词]\n参数1必填，参数2在增加/删除时必填，注意空格");
         }
 
         List<String> wantedAwardKeyword = SettingsCache.getInstance().getSettings(WANTED_AWARD_KEYWORD,
@@ -83,6 +88,6 @@ public class WantedCommand extends NoAuthCommand {
 
     @Override
     public CommandProperties properties() {
-        return new CommandProperties("初音悬赏令");
+        return new CommandProperties(globalParam.botName + "悬赏令", globalParam.botNick + "悬赏令");
     }
 }
