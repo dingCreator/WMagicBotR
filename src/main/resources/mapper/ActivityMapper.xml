@@ -4,8 +4,14 @@
     <insert id="createActivity" parameterType="com.whitemagic2014.pojo.Activity">
         insert into `activity`
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                `id`,
+            </if>
             <if test="activityType != null">
                 `activityType`,
+            </if>
+            <if test="activityName != null">
+                `activityName`,
             </if>
             <if test="activityRule != null">
                 activityRule,
@@ -24,8 +30,14 @@
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
             <if test="activityType != null">
                 #{activityType},
+            </if>
+            <if test="activityName != null">
+                #{activityName},
             </if>
             <if test="activityRule != null">
                 #{activityRule},
@@ -59,13 +71,32 @@
 
     <select id="getById" parameterType="java.lang.Long" resultType="com.whitemagic2014.pojo.Activity">
         SELECT * FROM `activity` WHERE id=#{activityId}
+        <if test="valid != null and valid == true">
+            AND enabled=1
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &gt;= startTime
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &lt;= endTime
+        </if>
     </select>
 
     <select id="queryActivityList" resultType="com.whitemagic2014.pojo.Activity">
         SELECT * FROM `activity`
+        <if test="valid != null and valid == true">
+            where enabled=1
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &gt;= startTime
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &lt;= endTime
+        </if>
     </select>
 
-    <select id="queryActivity" resultType="com.whitemagic2014.pojo.Activity">
-        SELECT * FROM `activity` WHERE activityType=#{activityType}
+    <select id="getActivityByName" resultType="com.whitemagic2014.pojo.Activity">
+        SELECT * FROM `activity` WHERE activityName=#{name}
+        <if test="valid != null and valid == true">
+            AND enabled=1
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &gt;= startTime
+            AND strftime('%Y-%m-%d', 'now', 'localtime') &lt;= endTime
+        </if>
+    </select>
+
+    <select id="getLastActivityId" resultType="java.lang.Long">
+        SELECT id FROM `activity` ORDER BY id DESC limit 1
     </select>
 </mapper>

@@ -36,7 +36,7 @@
         SELECT COUNT(1) FROM activity_receive_record
         <where>
             <if test="date != null">
-                AND `date` like #{date}||'%'
+                AND `date` like #{date}
             </if>
             <if test="receiverId != null">
                 AND `receiverId`=#{receiverId}

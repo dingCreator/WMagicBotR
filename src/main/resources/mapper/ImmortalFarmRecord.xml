@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whitemagic2014.dao.ImmortalFarmRecordDao">
+    <insert id="createRecord" parameterType="com.whitemagic2014.pojo.ImmortalFarmRecord">
+        insert into `immortal_farm_record`
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="groupId != null">
+                `groupId`,
+            </if>
+            <if test="point != null">
+                point,
+            </if>
+            <if test="money != null">
+                money,
+            </if>
+            <if test="date != null">
+                `date`,
+            </if>
+            <if test="ownerId != null">
+                ownerId
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="groupId != null">
+                #{groupId},
+            </if>
+            <if test="point != null">
+                #{point},
+            </if>
+            <if test="money != null">
+                #{money},
+            </if>
+            <if test="date != null">
+                #{date},
+            </if>
+            <if test="ownerId != null">
+                #{ownerId}
+            </if>
+        </trim>
+    </insert>
+
+    <select id="sumMoneyByGroupId" resultType="java.lang.Integer">
+        SELECT sum(money) FROM `immortal_farm_record`
+        where ownerId=#{ownerId}
+        <if test="date != null">
+            and date &gt;= #{date}
+        </if>
+    </select>
+
+    <select id="sumPointByGroupId" resultType="java.lang.Integer">
+        SELECT sum(point) FROM `immortal_farm_record`
+        where ownerId=#{ownerId}
+        <if test="date != null">
+            and date &gt;= #{date}
+        </if>
+    </select>
+</mapper>

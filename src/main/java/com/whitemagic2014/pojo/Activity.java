@@ -19,6 +19,11 @@ public class Activity {
     private Long id;
 
     /**
+     * 活动名称
+     */
+    private String activityName;
+
+    /**
      * 活动类型
      */
     private String activityType;
@@ -52,15 +57,26 @@ public class Activity {
     @AllArgsConstructor
     public enum ActivityType {
         /**
+         * 通用
+         */
+        GENERAL("GENERAL", false),
+        /**
          * 抽奖
          */
-        LUCKY("LUCKY"),
+        LUCKY("LUCKY", true),
         /**
          * 签到
          */
-        SIGN("SIGN"),
+        SIGN("SIGN", true),
         ;
+        /**
+         * 类型名称
+         */
         private final String name;
+        /**
+         * 是否可创建此类活动（区分是真实活动还是通用规范）
+         */
+        private final Boolean canCreate;
     }
 
     @Data
@@ -68,19 +84,23 @@ public class Activity {
         /**
          * 触发关键词
          */
-        protected List<String> keyword;
+        protected List<String> keywords;
         /**
-         * 限制参与 高5位-限制类型/其余位-次数限制
+         * 限制单人参与次数 高5位-限制类型/其余位-次数限制
          */
         protected Integer limit;
         /**
+         * 限制总体参与次数 高5位-限制类型/其余位-次数限制
+         */
+        protected Integer totalLimit;
+        /**
          * 参与成功回复
          */
-        protected List<String> successReply;
+        protected List<String> successReplies;
         /**
          * 参与失败回复
          */
-        protected List<String> failReply;
+        protected List<String> failReplies;
     }
 
     @Data

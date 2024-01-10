@@ -28,7 +28,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -244,11 +243,15 @@ public class AlchemyCommand extends NoAuthCommand {
         log.info("药材数量【{}】", baseMaterial.size());
 
         // 主药-冷热排序
-        List<Material> mainMaterialSortedByNature = baseMaterial.stream().sorted(Comparator.comparingInt(o ->
-                o.getMainMaterial().getNature())).map(Material::deepCopy).collect(Collectors.toList());
+        List<Material> mainMaterialSortedByNature = baseMaterial.stream()
+                .sorted(Comparator.comparingInt(o -> o.getMainMaterial().getNature()))
+                .sorted(Comparator.comparingInt(o -> o.getMainMaterial().getPower()))
+                .map(Material::deepCopy).collect(Collectors.toList());
         // 药引-冷热排序
-        List<Material> associateMaterialSortedByNature = baseMaterial.stream().sorted(Comparator.comparingInt(o ->
-                o.getAssociateMaterial().getNature())).map(Material::deepCopy).collect(Collectors.toList());
+        List<Material> associateMaterialSortedByNature = baseMaterial.stream()
+                .sorted(Comparator.comparingInt(o -> o.getAssociateMaterial().getNature()))
+                .sorted(Comparator.comparingInt(o -> o.getAssociateMaterial().getPower()))
+                .map(Material::deepCopy).collect(Collectors.toList());
         // 主药-药力排序
 //        List<Material> mainMaterialSortedByEffect = baseMaterial.stream().sorted(Comparator.comparingInt(o ->
 //                o.getMainMaterial().getProperties().getEffectNums())).map(Material::deepCopy)
@@ -276,7 +279,7 @@ public class AlchemyCommand extends NoAuthCommand {
             return reply.toString();
         } else {
             // 优先级计算
-            int maxVal = 0;
+            int score = 0;
             List<Material> r = null;
             for (List<Material> ml : result) {
                 // 校验数量是否足够的情况下，计算最高得分
@@ -285,6 +288,11 @@ public class AlchemyCommand extends NoAuthCommand {
                 Material associateMaterial = ml.get(1);
                 Material supportMaterial = ml.get(2);
 
+                if (mainMaterial.getNum() > 20 || associateMaterial.getNum() > 20 || supportMaterial.getNum() > 20) {
+                    continue;
+                }
+
+                // 设置扣减炼丹数量后剩余数量
                 temp.put(ml.get(0).getSourceName(),
                         temp.getOrDefault(mainMaterial.getSourceName(), 0) - mainMaterial.getNum());
                 temp.put(associateMaterial.getSourceName(),
@@ -299,22 +307,25 @@ public class AlchemyCommand extends NoAuthCommand {
                     continue;
                 }
 
+                // 剩余数量 * 权重 / 消耗量
                 int point = temp.getOrDefault(mainMaterial.getSourceName(), 0)
-                        * mainMaterial.getMainMaterial().getPower()
-                        + temp.getOrDefault(associateMaterial.getSourceName(), 0)
-                        * associateMaterial.getAssociateMaterial().getPower()
+                        * mainMaterial.getMainMaterial().getPower() / mainMaterial.getNum()
                         + temp.getOrDefault(supportMaterial.getSourceName(), 0)
-                        * supportMaterial.getSupportMaterial().getPower();
+                        * supportMaterial.getSupportMaterial().getPower() / supportMaterial.getNum();
+                if (associateMaterial.getNum() > 0) {
+                    point += temp.getOrDefault(associateMaterial.getSourceName(), 0)
+                            * associateMaterial.getAssociateMaterial().getPower() / associateMaterial.getNum();
+                }
 
-                if (point > maxVal) {
-                    maxVal = point;
+                if (point > score) {
+                    score = point;
                     r = Arrays.asList(ml.get(0), ml.get(1), ml.get(2));
                 }
             }
-            if (maxVal == 0) {
+            if (score == 0) {
                 return HERB_NOT_ENOUGH;
             }
-            System.out.println("maxVal:[" + maxVal + "] main material power:[" +
+            System.out.println("score:[" + score + "] main material power:[" +
                     r.get(0).getMainMaterial().getPower() + "] associate material power:[" +
                     r.get(1).getAssociateMaterial().getPower() + "] support material power:[" +
                     r.get(2).getSupportMaterial().getPower() + "]");
@@ -423,7 +434,7 @@ public class AlchemyCommand extends NoAuthCommand {
 
                 if (supportProp.getProperties().getEffect().equals(anotherEffect)) {
                     if (supportEffectNum >= anotherEffectNumTo * 5) {
-                        rightPointer--;
+                        continue;
                     }
                     // 辅药可以考虑超出药力
                     if (supportEffectNum >= anotherEffectNumFrom) {
@@ -486,12 +497,25 @@ public class AlchemyCommand extends NoAuthCommand {
             int count = 0;
 
             MaterialProperties mainProp = null, associateProp = null, supportProp = null;
+            int power = 1;
             for (String i : info) {
                 i = i.trim();
                 if (i.startsWith("名字：")) {
                     name = i.replace("名字：", "").trim();
                 } else if (i.startsWith("品级")) {
-                    // todo 品级权重
+                    String rankStr = i.replace("：", ":").replace("品级:", "")
+                            .replace("品药材", "").trim();
+                    switch (rankStr) {
+                        case "七":
+                        case "八":
+                            power *= 30;
+                            break;
+                        case "九":
+                            power *= 25;
+                            break;
+                        default:
+                            break;
+                    }
                 } else if (i.startsWith("主药")) {
                     String[] prop = i.split(" ");
                     String nature = prop[1].substring(0, 2);
@@ -550,18 +574,12 @@ public class AlchemyCommand extends NoAuthCommand {
                     }
                 }
             }
-            setPower(name, mainProp);
-            setPower(name, associateProp);
-            setPower(name, supportProp);
+            mainProp.setPower(power);
+            associateProp.setPower(power);
+            supportProp.setPower(power);
             result.add(new Material(name, count, mainProp, associateProp, supportProp));
         });
         return result;
-    }
-
-    private void setPower(String name, MaterialProperties properties) {
-        if (!"恒心草".equals(name)) {
-            properties.setPower(100);
-        }
     }
 
     private void countTimes(Member sender) {
@@ -707,19 +725,36 @@ public class AlchemyCommand extends NoAuthCommand {
         private int effectNums;
     }
 
+    /**
+     * 药性
+     */
     @Getter
     @AllArgsConstructor
     private enum MaterialEffect {
         /**
-         * 药性
+         * 0_000_数量
          */
-        SHENG_XI("生息"),
-        YANG_QI("养气"),
-        LIAN_QI("炼气"),
-        JU_YUAN("聚元"),
-        NING_SHEN("凝神"),
+        SHENG_XI("生息", 0),
+        /**
+         * 0_001_数量
+         */
+        YANG_QI("养气", 1 << 28),
+        /**
+         * 0_010_数量
+         */
+        LIAN_QI("炼气", 2 << 28),
+        /**
+         * 0_011_数量
+         */
+        JU_YUAN("聚元", 3 << 28),
+        /**
+         * 0_100_数量
+         */
+        NING_SHEN("凝神", 4 << 28),
         ;
         private final String effectTypeName;
+
+        private final Integer typeCode;
 
         public static MaterialEffect getType(String name) {
             return Arrays.stream(MaterialEffect.values())
@@ -956,6 +991,61 @@ public class AlchemyCommand extends NoAuthCommand {
                 new MaterialEffectProperties(MaterialEffect.SHENG_XI, 3072),
                 new MaterialEffectProperties(MaterialEffect.YANG_QI, 1536),
                 new MaterialEffectProperties(MaterialEffect.YANG_QI, 3072)
+        ));
+        // 血量上限丹
+        ALCHEMY_DICT.put("健身丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 6),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 12),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 6),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 12)
+        ));
+        ALCHEMY_DICT.put("生命丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 12),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 24),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 12),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 24)
+        ));
+        ALCHEMY_DICT.put("养怡丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 24),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 48),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 24),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 48)
+        ));
+        ALCHEMY_DICT.put("活仙心丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 48),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 96),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 48),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 96)
+        ));
+        ALCHEMY_DICT.put("三纹凝血丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 96),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 192),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 96),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 192)
+        ));
+        ALCHEMY_DICT.put("复灵红丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 192),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 384),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 192),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 384)
+        ));
+        ALCHEMY_DICT.put("幽冥寿丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 384),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 768),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 384),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 768)
+        ));
+        ALCHEMY_DICT.put("九阳大还丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 768),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 1536),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 768),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 1536)
+        ));
+        ALCHEMY_DICT.put("混沌天罗丹", Arrays.asList(
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 1536),
+                new MaterialEffectProperties(MaterialEffect.YANG_QI, 3072),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 1536),
+                new MaterialEffectProperties(MaterialEffect.NING_SHEN, 3072)
         ));
     }
 }

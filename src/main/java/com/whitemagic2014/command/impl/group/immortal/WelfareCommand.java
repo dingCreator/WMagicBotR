@@ -56,7 +56,7 @@ public class WelfareCommand extends NoAuthCommand {
                 return new PlainText(outOfLimitedReply);
             }
 
-            int receiveCount = activityReceiveRecordService.selectCount(todayStr);
+            int receiveCount = activityReceiveRecordService.selectCount(todayStr, null, 1L);
             if (receiveCount >= SettingsCache.getInstance().getSettingsAsInt(DAILY_WELFARE_LIMIT_KEYWORD, 10)) {
                 return new PlainText(outOfLimitedReply);
             }
@@ -64,7 +64,7 @@ public class WelfareCommand extends NoAuthCommand {
             activityReceiveRecordService.insert(new ActivityReceiveRecord(todayStr, sender.getId(), 1L));
             List<Message> msgList = new ArrayList<Message>();
             msgList.add(new PlainText("世界积分兑换1"));
-            msgList.add(new PlainText("坊市上架 渡厄丹 " + RandomUtil.randomInt(10000, 1000000)));
+            msgList.add(new PlainText("坊市上架 渡厄丹 " + RandomUtil.randomInt(10000, 500_000)));
             commandThreadPoolUtil.addGroupTask(msgList, sender.getGroup().getId());
             return new PlainText("啊咧~☆ 是你啊！给你点好东西吧Kira~☆");
         } finally {

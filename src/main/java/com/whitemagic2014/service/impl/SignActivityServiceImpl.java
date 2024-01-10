@@ -6,7 +6,9 @@ import com.whitemagic2014.pojo.Activity;
 import com.whitemagic2014.service.ActivityService;
 
 import com.whitemagic2014.util.ActivityManagerUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.contact.Member;
@@ -17,6 +19,7 @@ import net.mamoe.mirai.message.data.PlainText;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,7 +28,8 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class SignActivityServiceImpl implements ActivityService<Activity.ActivityAwardRule> {
+public class SignActivityServiceImpl implements ActivityService<SignActivityServiceImpl.SignActivityRule,
+        SignActivityServiceImpl.SignAwardRule> {
 
     @Autowired
     private ActivityDao activityDao;
@@ -40,14 +44,17 @@ public class SignActivityServiceImpl implements ActivityService<Activity.Activit
 
     @Override
     public List<Message> joinActivity(long activityId, long userId) {
-        Activity activity = activityDao.getById(activityId);
+        Activity activity = activityDao.getById(activityId, true);
         if (activity == null) {
             return null;
         }
         SignActivityRule signActivityRule = JSONObject.parseObject(activity.getActivityRule(), SignActivityRule.class);
 
-        Activity.ActivityAwardRule awardRule = JSONObject.parseObject(activity.getAwardRule(), Activity.ActivityAwardRule.class);
-        return activityManagerUtil.buildAwardMessage(awardRule.getAwardName(), awardRule.getAwardNum(), userId);
+        List<Activity.ActivityAwardRule> awardRule = JSONObject.parseArray(activity.getAwardRule(), Activity.ActivityAwardRule.class);
+        List<Message> msgList = new ArrayList<>();
+        awardRule.forEach(award -> msgList.addAll(activityManagerUtil
+                .buildAwardMessage(award.getAwardName(), award.getAwardNum(), userId)));
+        return msgList;
     }
 
     @Override
@@ -57,19 +64,14 @@ public class SignActivityServiceImpl implements ActivityService<Activity.Activit
     }
 
     @Override
-    public SignActivityRule buildRule(String ruleJson) {
-        try {
-            return JSONObject.parseObject(ruleJson, SignActivityRule.class);
-        } catch (Exception e) {
-            log.error("活动规则构建失败", e);
-        }
-        return null;
+    public SignActivityRule buildRule(Activity.ActivityRule rule, List<String> args) {
+        return (SignActivityRule) rule;
     }
 
     @Override
-    public List<Activity.ActivityAwardRule> buildAwardRule(String awardRuleJson) {
+    public List<SignAwardRule> buildAwardRule(String awardRuleJson) {
         try {
-            return JSONObject.parseArray(awardRuleJson, Activity.ActivityAwardRule.class);
+            return JSONObject.parseArray(awardRuleJson, SignAwardRule.class);
         } catch (Exception e) {
             log.error("奖品规则构建失败", e);
         }
@@ -77,15 +79,41 @@ public class SignActivityServiceImpl implements ActivityService<Activity.Activit
     }
 
     @Override
-    public List<Activity> queryActivity() {
-        return activityDao.queryActivity(Activity.ActivityType.SIGN.getName());
+    public String getActivityDetail(Activity activity) {
+        return null;
     }
 
     @Data
     public static class SignActivityRule extends Activity.ActivityRule {
+
+    }
+
+    @Data
+    public static class SignAwardRule extends Activity.ActivityAwardRule {
         /**
-         * 日签到总数上限
+         * 奖品类型
          */
-        private Integer dailyLimit;
+        private String signAwardType;
+        /**
+         * 规则值
+         */
+        private Integer val;
+
+        @Getter
+        @AllArgsConstructor
+        public enum signAwardType {
+            CONTINUOUS("CONTINUOUS", "连续签到"),
+            ACCUMULATIVE("ACCUMULATIVE", "累计签到"),
+            NORMAL("NORMAL", "普通签到"),
+            ;
+            /**
+             * 类型名称
+             */
+            private final String name;
+            /**
+             * 类型描述
+             */
+            private final String desc;
+        }
     }
 }

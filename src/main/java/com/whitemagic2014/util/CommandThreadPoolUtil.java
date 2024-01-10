@@ -68,8 +68,4 @@ public class CommandThreadPoolUtil {
         }
     }
 
-//    @PreDestroy
-//    private void preDestroy() {
-//        bot.getGroupOrFail().sendMessage(new PlainText("嘶哑 ~☆"));
-//    }
 }

@@ -33,6 +33,6 @@ public class ActivityReceiveRecordServiceImpl implements ActivityReceiveRecordSe
 
     @Override
     public int selectCount(String date, Long receiverId, Long activityId) {
-        return activityReceiveRecordDao.selectCount(date, receiverId, activityId);
+        return activityReceiveRecordDao.selectCount(date + "%", receiverId, activityId);
     }
 }

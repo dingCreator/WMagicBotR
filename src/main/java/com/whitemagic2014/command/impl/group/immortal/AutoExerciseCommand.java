@@ -9,7 +9,10 @@ import com.whitemagic2014.command.impl.group.EmptyStringCommand;
 import com.whitemagic2014.command.impl.group.OwnerCommand;
 import com.whitemagic2014.command.impl.group.immortal.util.CalBossUtil;
 import com.whitemagic2014.command.impl.group.immortal.util.DTO.FarmDTO;
+import com.whitemagic2014.command.impl.group.immortal.util.ImmortalConstants;
 import com.whitemagic2014.command.impl.group.immortal.util.TimeUtil;
+import com.whitemagic2014.pojo.ImmortalFarmRecord;
+import com.whitemagic2014.service.ImmortalFarmRecordService;
 import com.whitemagic2014.util.CommandThreadPoolUtil;
 import com.whitemagic2014.config.properties.GlobalParam;
 import com.whitemagic2014.pojo.CommandProperties;
@@ -54,47 +57,6 @@ public class AutoExerciseCommand extends OwnerCommand {
     @Value("${immortal.mainGroup:0}")
     private long mainGroupId;
 
-    // 指令关键字
-    private static final String START_KEYWORD = "开始";
-    private static final String STOP_KEYWORD1 = "结束";
-    private static final String STOP_KEYWORD2 = "停止";
-    private static final String SWITCH_KEYWORD = "切换";
-    private static final String STATUS_KEYWORD = "状态";
-    private static final String DAILY_KEYWORD = "日常";
-    private static final String WANTED_KEYWORD = "悬赏令";
-    private static final String UPGRADE_KEYWORD = "突破";
-    private static final String NOW_ATTACK_BOSS_KEYWORD = "打boss";
-    private static final String SEARCH_RANK_KEYWORD = "查询境界";
-    private static final String EXPLORE_KEYWORD = "秘境";
-
-    private static final String PREVIEW_KEYWORD = "查看";
-    private static final String ADD_KEYWORD1 = "增加";
-    private static final String ADD_KEYWORD2 = "新增";
-    private static final String DEL_KEYWORD = "删除";
-
-    // 识别关键字
-    private static final String AUTO_COLLECT_KEY = "autoCollect";
-    private static final String TASK_PERIOD_KEY = MagicMd5.getMd5String("autoTask");
-    private static final String TASK_COMPLETED_KEYWORD = "今日无法再获取";
-    private static final String DAILY_PERIOD_KEYWORD = "还没有宗门任务";
-    private static final String NO_BOSS_KEYWORD = "本群尚未生成";
-    private static final String CANT_ATTACK_KEYWORD1 = "重伤未愈";
-    private static final String CANT_ATTACK_KEYWORD2 = "重伤遁逃";
-    private static final String NUMBER_KEYWORD = "编号";
-    private static final String HAS_BOSS_KEYWORD = "Boss";
-    private static final List<String> TASK_KEYWORD = Arrays.asList("灰尘", "罕见", "不要多问", "工厂", "耗材");
-
-    // 配置关键字
-    private static final String MODE_KEYWORD = "修仙_修炼模式";
-    private static final String AUTO_WANTED_KEYWORD = "修仙_悬赏令";
-    private static final String AUTO_UPGRADE_KEYWORD = "修仙_突破模式";
-    private static final String ATTACK_PERIOD_KEYWORD = "修仙_攻击间歇";
-    private static final String BOT_RANK_KEYWORD = "修仙_当前境界";
-    private static final String LAST_LEVEL_UP_TIME_KEYWORD = "修仙_上次突破时间";
-    private static final String LAST_COLLECT_HERBS_TIME_KEYWORD = "修仙_前次收取药草时间";
-    private static final String COLLECT_HERBS_PERIOD_KEYWORD = "修仙_收取药草间隔";
-    private static final String EXPLORE_GROUPS_KEYWORD = "修仙_秘境群号";
-
     /**
      * 容器
      */
@@ -111,31 +73,15 @@ public class AutoExerciseCommand extends OwnerCommand {
             new UpgradeCommandKeyword(),
             new NowAttackBossCommandKeyword(),
             new SearchRankKeyword(),
-            new ExploreKeyword()
+            new ExploreKeyword(),
+            new SetSettingsKeyword()
     );
 
-    /**
-     * 时间参数
-     */
-    private static final long IN_OUT_PERIOD = 60 * 1000L;
-    private static final long IN_OUT_DELAY = 5 * 1000L;
-
-    private static final long WANTED_PERIOD = 61 * 60 * 1000L;
-    private static final long WANTED_DELAY = 10 * 1000L;
-
-    private static final long IMPROVE_PERIOD = 61 * 60 * 1000L;
-    private static final long IMPROVE_DELAY = 15 * 1000L;
-
-    private static final long TASK_PERIOD = 6 * 60 * 1000L;
-    private static final long TASK_DELAY = 2 * 1000L;
-
-    private static final long COLLECT_HERBS_PERIOD = 30 * 1000L;
-    private static final long COLLECT_HERBS_DELAY = 10 * 1000L;
-
-    private static final AtomicBoolean CONTINUE_ATTACK = new AtomicBoolean(true);
-    private static final long ATTACK_BOSS_PERIOD = 15 * 1000L;
-
     // 中间过程变量
+    /**
+     * 是否继续打boss
+     */
+    private static final AtomicBoolean CONTINUE_ATTACK = new AtomicBoolean(true);
     /**
      * 是否有正在进行的日常周期任务
      */
@@ -180,6 +126,9 @@ public class AutoExerciseCommand extends OwnerCommand {
 
     @Autowired
     private CommandThreadPoolUtil commandThreadPoolUtil;
+
+    @Autowired
+    private ImmortalFarmRecordService immortalFarmRecordService;
 
     @Override
     public CommandProperties properties() {
@@ -227,7 +176,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return START_KEYWORD.equals(keyword);
+            return ImmortalConstants.START_KEYWORD.equals(keyword);
         }
 
         @Override
@@ -244,7 +193,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return STOP_KEYWORD1.equals(keyword) || STOP_KEYWORD2.equals(keyword);
+            return ImmortalConstants.STOP_KEYWORD1.equals(keyword) || ImmortalConstants.STOP_KEYWORD2.equals(keyword);
         }
 
         @Override
@@ -261,7 +210,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return keyword.startsWith(SWITCH_KEYWORD);
+            return keyword.startsWith(ImmortalConstants.SWITCH_KEYWORD);
         }
 
         @Override
@@ -270,16 +219,16 @@ public class AutoExerciseCommand extends OwnerCommand {
                 return new PlainText("错误的模式");
             }
             if ("0".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 0);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.MODE_KEYWORD, 0);
                 return new PlainText("模式切换为 正常修炼");
             } else if ("1".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 1);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.MODE_KEYWORD, 1);
                 return new PlainText("模式切换为 左右互搏");
             } else if ("2".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 2);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.MODE_KEYWORD, 2);
                 return new PlainText("模式切换为 打boss");
             } else if ("3".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 3);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.MODE_KEYWORD, 3);
                 return new PlainText("模式切换为 秘境");
             }
             return new PlainText("错误的模式");
@@ -293,7 +242,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return STATUS_KEYWORD.equals(keyword);
+            return ImmortalConstants.STATUS_KEYWORD.equals(keyword);
         }
 
         @Override
@@ -302,7 +251,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             stringBuilder.append(PERIOD_KEYS.size() > 0 ? "自动修仙" : "停止修仙");
             stringBuilder.append("\n当前修仙模式 ");
 
-            switch (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0)) {
+            switch (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.MODE_KEYWORD, 0)) {
                 case 0:
                     stringBuilder.append("正常修炼");
                     break;
@@ -323,11 +272,11 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
 
             stringBuilder.append("\n当前悬赏模式 ");
-            boolean autoWanted = SettingsCache.getInstance().getSettingsAsBoolean(AUTO_WANTED_KEYWORD, false);
+            boolean autoWanted = SettingsCache.getInstance().getSettingsAsBoolean(ImmortalConstants.AUTO_WANTED_KEYWORD, false);
             stringBuilder.append(autoWanted ? "接取" : "不接取");
             stringBuilder.append("\n当前突破模式 ");
 
-            switch (SettingsCache.getInstance().getSettingsAsInt(AUTO_UPGRADE_KEYWORD, 0)) {
+            switch (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.AUTO_UPGRADE_KEYWORD, 0)) {
                 case 0:
                     stringBuilder.append("不突破");
                     break;
@@ -342,12 +291,21 @@ public class AutoExerciseCommand extends OwnerCommand {
                     break;
             }
             stringBuilder.append("\n攻击周期 ")
-                    .append(SettingsCache.getInstance().getSettingsAsInt(ATTACK_PERIOD_KEYWORD, 1))
+                    .append(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.ATTACK_PERIOD_KEYWORD, 1))
+                    .append("分钟")
+                    .append("\n随机攻击周期 ")
+                    .append(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.ATTACK_RANDOM_PERIOD_KEYWORD, 1))
+                    .append("分钟")
+                    .append("\n随机突破周期 ")
+                    .append(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.LEVEL_UP_RANDOM_PERIOD_KEYWORD, 1))
                     .append("分钟")
                     .append("\n当前设置的境界 ")
-                    .append(SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1))
+                    .append(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1))
                     .append("\n上次收取灵田时间 ")
-                    .append(SettingsCache.getInstance().getSettings(LAST_COLLECT_HERBS_TIME_KEYWORD));
+                    .append(SettingsCache.getInstance().getSettings(ImmortalConstants.LAST_COLLECT_HERBS_TIME_KEYWORD))
+                    .append("\n上次突破时间：")
+                    .append(SettingsCache.getInstance().getSettings(ImmortalConstants.LAST_LEVEL_UP_TIME_KEYWORD))
+            ;
             return new PlainText(stringBuilder.toString());
         }
     }
@@ -359,7 +317,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return DAILY_KEYWORD.equals(keyword);
+            return ImmortalConstants.DAILY_KEYWORD.equals(keyword);
         }
 
         @Override
@@ -371,7 +329,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("宗门丹药领取"));
 
             if (!hasDailyPeriod) {
-                MagicPeriodTask.build(TASK_PERIOD_KEY, () -> {
+                MagicPeriodTask.build(ImmortalConstants.TASK_PERIOD_KEY, () -> {
                     TaskStatusEnum taskStatusEnum = tryCompleteTask(System.currentTimeMillis());
                     if (TaskStatusEnum.DO_IT.equals(taskStatusEnum)) {
                         if (NEED_REFRESH.get()) {
@@ -381,7 +339,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                             NEED_REFRESH.set(true);
                         }
                     }
-                }).schedule(TASK_DELAY, TASK_PERIOD);
+                }).schedule(ImmortalConstants.TASK_DELAY, ImmortalConstants.TASK_PERIOD);
                 hasDailyPeriod = true;
             }
             return new PlainText("开始做日常");
@@ -395,7 +353,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return keyword.startsWith(WANTED_KEYWORD);
+            return keyword.startsWith(ImmortalConstants.WANTED_KEYWORD);
         }
 
         @Override
@@ -403,11 +361,11 @@ public class AutoExerciseCommand extends OwnerCommand {
             if (CollectionUtils.isEmpty(args)) {
                 return new PlainText("关键词错误");
             }
-            if (START_KEYWORD.equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(AUTO_WANTED_KEYWORD, true);
+            if (ImmortalConstants.START_KEYWORD.equals(args.get(0))) {
+                SettingsCache.getInstance().setSettings(ImmortalConstants.AUTO_WANTED_KEYWORD, true);
                 return new PlainText("开始自动接悬赏");
-            } else if (STOP_KEYWORD1.equals(args.get(0)) || STOP_KEYWORD2.equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(AUTO_WANTED_KEYWORD, false);
+            } else if (ImmortalConstants.STOP_KEYWORD1.equals(args.get(0)) || ImmortalConstants.STOP_KEYWORD2.equals(args.get(0))) {
+                SettingsCache.getInstance().setSettings(ImmortalConstants.AUTO_WANTED_KEYWORD, false);
                 return new PlainText("停止自动接悬赏");
             } else {
                 return new PlainText("关键词错误");
@@ -422,7 +380,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return keyword.startsWith(UPGRADE_KEYWORD);
+            return keyword.startsWith(ImmortalConstants.UPGRADE_KEYWORD);
         }
 
         @Override
@@ -431,13 +389,16 @@ public class AutoExerciseCommand extends OwnerCommand {
                 return new PlainText("模式错误");
             }
             if ("0".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(AUTO_UPGRADE_KEYWORD, 0);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.AUTO_UPGRADE_KEYWORD, 0);
+                stopAutoUpgradeRank();
                 return new PlainText("不自动突破");
             } else if ("1".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(AUTO_UPGRADE_KEYWORD, 1);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.AUTO_UPGRADE_KEYWORD, 1);
+                registerAutoUpgradeRank();
                 return new PlainText("不使用丹药突破");
             } else if ("2".equals(args.get(0))) {
-                SettingsCache.getInstance().setSettings(AUTO_UPGRADE_KEYWORD, 2);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.AUTO_UPGRADE_KEYWORD, 2);
+                registerAutoUpgradeRank();
                 return new PlainText("丹药突破");
             } else {
                 return new PlainText("模式错误");
@@ -452,12 +413,12 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return NOW_ATTACK_BOSS_KEYWORD.equalsIgnoreCase(keyword);
+            return ImmortalConstants.NOW_ATTACK_BOSS_KEYWORD.equalsIgnoreCase(keyword);
         }
 
         @Override
         public Message execute(String keyword, List<String> args) {
-            if (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0) != 2) {
+            if (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.MODE_KEYWORD, 0) != 2) {
                 return new PlainText("现在的模式不为打boss");
             }
             if (CollectionUtils.isEmpty(args)) {
@@ -483,7 +444,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return keyword.startsWith(SEARCH_RANK_KEYWORD);
+            return keyword.startsWith(ImmortalConstants.SEARCH_RANK_KEYWORD);
         }
 
         @Override
@@ -500,7 +461,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
         @Override
         public boolean support(String keyword) {
-            return keyword.equals(EXPLORE_KEYWORD);
+            return keyword.equals(ImmortalConstants.EXPLORE_KEYWORD);
         }
 
         @Override
@@ -510,8 +471,8 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
 
             switch (args.get(0)) {
-                case PREVIEW_KEYWORD:
-                    String config = SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD, preview -> {
+                case ImmortalConstants.PREVIEW_KEYWORD:
+                    String config = SettingsCache.getInstance().getSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD, preview -> {
                         List<Long> list = JSONObject.parseArray(preview, Long.class);
                         if (CollectionUtils.isEmpty(list)) {
                             return "";
@@ -525,8 +486,8 @@ public class AutoExerciseCommand extends OwnerCommand {
                         return builder.toString();
                     });
                     return StringUtils.isEmpty(config) ? new PlainText("当前没有配置") : new PlainText(config);
-                case ADD_KEYWORD1:
-                case ADD_KEYWORD2:
+                case ImmortalConstants.ADD_KEYWORD1:
+                case ImmortalConstants.ADD_KEYWORD2:
                     if (args.size() <= 1) {
                         return new PlainText("请输入群号");
                     }
@@ -543,7 +504,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                         return new PlainText(globalParam.botNick + "没有加入该群");
                     }
 
-                    String str = SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD);
+                    String str = SettingsCache.getInstance().getSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD);
                     List<Long> list;
                     if (StringUtils.isEmpty(str)) {
                         list = new ArrayList<>();
@@ -554,9 +515,9 @@ public class AutoExerciseCommand extends OwnerCommand {
                         return new PlainText("该配置已存在");
                     }
                     list.add(groupId);
-                    SettingsCache.getInstance().setSettings(EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(list));
+                    SettingsCache.getInstance().setSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(list));
                     return new PlainText("增加成功");
-                case DEL_KEYWORD:
+                case ImmortalConstants.DEL_KEYWORD:
                     if (args.size() <= 1) {
                         return new PlainText("请输入编号");
                     }
@@ -567,7 +528,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                     }
 
                     List<Long> groupList = SettingsCache.getInstance()
-                            .getSettings(EXPLORE_GROUPS_KEYWORD, g -> JSONObject.parseArray(g, Long.class));
+                            .getSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD, g -> JSONObject.parseArray(g, Long.class));
                     List<Integer> sortedNums = nums.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
                     int count = 0;
                     for (int num : sortedNums) {
@@ -576,12 +537,50 @@ public class AutoExerciseCommand extends OwnerCommand {
                             count++;
                         }
                     }
-                    SettingsCache.getInstance().setSettings(EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(groupList));
+                    SettingsCache.getInstance().setSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD, JSONObject.toJSONString(groupList));
                     return new PlainText("成功删除【" + count + "】条配置");
                 default:
                     break;
             }
             return null;
+        }
+    }
+
+    /**
+     * 设置时间周期指令
+     */
+    private class SetSettingsKeyword implements ICommandKeyword {
+
+        @Override
+        public boolean support(String keyword) {
+            return keyword.equals(ImmortalConstants.SET_SETTINGS_KEYWORD);
+        }
+
+        @Override
+        public Message execute(String keyword, List<String> args) {
+            if (args.size() < 2) {
+                return new PlainText("参数不足");
+            }
+            int val;
+            try {
+                val = Integer.parseInt(args.get(1));
+            } catch (Exception e) {
+                return new PlainText("参数格式错误");
+            }
+
+            switch (args.get(0)) {
+                case "攻击周期":
+                    SettingsCache.getInstance().setSettings(ImmortalConstants.ATTACK_PERIOD_KEYWORD, val);
+                    return new PlainText("更新成功");
+                case "攻击随机周期":
+                    SettingsCache.getInstance().setSettings(ImmortalConstants.ATTACK_RANDOM_PERIOD_KEYWORD, val);
+                    return new PlainText("更新成功");
+                case "突破随机周期":
+                    SettingsCache.getInstance().setSettings(ImmortalConstants.LEVEL_UP_RANDOM_PERIOD_KEYWORD, val);
+                    return new PlainText("更新成功");
+                default:
+                    return new PlainText("参数关键字错误");
+            }
         }
     }
 
@@ -600,33 +599,26 @@ public class AutoExerciseCommand extends OwnerCommand {
     }
 
     /**
-     * 随机延时
-     */
-    private static void waitRandomMillis(long base, int range) {
-        try {
-            Thread.sleep(base + RANDOM.nextInt(range));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * 开始自动修仙
      */
     public void startAuto() {
         Bot bot = MagicBotR.getBot();
         bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
+
+        // 注册统计打boss指令
+        registerFarmStatic();
+
         // 定时闭关出关
         String key = MagicMd5.getMd5String("exercise-inOut");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
-            waitRandomMillis(1000, 2000);
-            switch (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0)) {
+            TimeUtil.waitRandomMillis(1000, 2000);
+            switch (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.MODE_KEYWORD, 0)) {
                 case 0:
                     return;
                 case 1:
                     if (System.currentTimeMillis() >= attackStartTimeMillis
-                            + SettingsCache.getInstance().getSettingsAsInt(ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000) {
+                            + SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000) {
                         bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("抢劫").plus(makeAt(globalParam.botId)));
                         attackStartTimeMillis = System.currentTimeMillis();
 
@@ -635,8 +627,9 @@ public class AutoExerciseCommand extends OwnerCommand {
                     }
                     break;
                 case 2:
-                    if (System.currentTimeMillis() >= attackStartTimeMillis
-                            + 2 * SettingsCache.getInstance().getSettingsAsInt(ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000) {
+                    int cycle = 2 * SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.ATTACK_PERIOD_KEYWORD, 2) * 60 * 1000;
+                    int randomCycle = RANDOM.nextInt(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.ATTACK_RANDOM_PERIOD_KEYWORD, 2));
+                    if (System.currentTimeMillis() >= attackStartTimeMillis + cycle) {
                         attackAllBoss(getCollectGroupIds());
                         attackStartTimeMillis = System.currentTimeMillis();
                     }
@@ -657,7 +650,7 @@ public class AutoExerciseCommand extends OwnerCommand {
 
                             bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵石出关"));
                             commandThreadPoolUtil.addGroupTask(new PlainText("探索秘境"),
-                                    JSONObject.parseArray(SettingsCache.getInstance().getSettings(EXPLORE_GROUPS_KEYWORD), Long.class),
+                                    JSONObject.parseArray(SettingsCache.getInstance().getSettings(ImmortalConstants.EXPLORE_GROUPS_KEYWORD), Long.class),
                                     botR -> {
                                         botR.getGroupOrFail(mainGroupId).sendMessage(new PlainText("秘境结算"));
                                         doingExplore.set(false);
@@ -668,18 +661,18 @@ public class AutoExerciseCommand extends OwnerCommand {
                 default:
                     break;
             }
-        }).schedule(IN_OUT_DELAY, IN_OUT_PERIOD);
+        }).schedule(ImmortalConstants.IN_OUT_DELAY, ImmortalConstants.IN_OUT_PERIOD);
 
         key = MagicMd5.getMd5String("exercise-wanted");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
-            if (!SettingsCache.getInstance().getSettingsAsBoolean(AUTO_WANTED_KEYWORD, false)) {
+            if (!SettingsCache.getInstance().getSettingsAsBoolean(ImmortalConstants.AUTO_WANTED_KEYWORD, false)) {
                 return;
             }
-            waitRandomMillis(1000, 3000);
+            TimeUtil.waitRandomMillis(5000, 5000);
             if (!WantedCommand.wanted || WantedCommand.wantedEndTimeMillis == 0) {
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵石出关"));
-                if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
+                if (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1) < 29) {
                     bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("悬赏令"));
                 } else {
                     bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("渡劫境悬赏令"));
@@ -691,42 +684,44 @@ public class AutoExerciseCommand extends OwnerCommand {
                 WantedCommand.wantedEndTimeMillis = 0;
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
             }
-        }).schedule(WANTED_DELAY, WANTED_PERIOD);
+        }).schedule(ImmortalConstants.WANTED_DELAY, ImmortalConstants.WANTED_PERIOD);
 
         // 自动突破
         key = MagicMd5.getMd5String("exercise-improve");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
-            waitRandomMillis(1000, 3000);
-            int upgradeMode = SettingsCache.getInstance().getSettingsAsInt(AUTO_UPGRADE_KEYWORD, 0);
+            TimeUtil.waitRandomMillis(1000, 3000);
+            int upgradeMode = SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.AUTO_UPGRADE_KEYWORD, 0);
             if (upgradeMode > 1) {
+                registerAutoUpgradeRank();
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("突破 使用"));
             }
             if (upgradeMode > 0) {
+                registerAutoUpgradeRank();
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("突破 不使用"));
             }
-        }).schedule(IMPROVE_DELAY, IMPROVE_PERIOD);
+        }).schedule(ImmortalConstants.IMPROVE_DELAY, ImmortalConstants.IMPROVE_PERIOD);
 
         // 自动收取药草
         key = MagicMd5.getMd5String("exercise-collectHerbs");
         PERIOD_KEYS.add(key);
         MagicPeriodTask.build(key, () -> {
             Date date = new Date(0);
-            String lastCollectTimeStr = SettingsCache.getInstance().getSettings(LAST_COLLECT_HERBS_TIME_KEYWORD);
+            String lastCollectTimeStr = SettingsCache.getInstance().getSettings(ImmortalConstants.LAST_COLLECT_HERBS_TIME_KEYWORD);
             if (!StringUtils.isEmpty(lastCollectTimeStr)) {
                 date = DateUtil.parse(lastCollectTimeStr, "yyyy-MM-dd HH:mm:ss");
             }
 
-            int collectHerbsPeriod = SettingsCache.getInstance().getSettingsAsInt(COLLECT_HERBS_PERIOD_KEYWORD, 24);
+            int collectHerbsPeriod = SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.COLLECT_HERBS_PERIOD_KEYWORD, 24);
             date = DateUtil.offsetHour(date, collectHerbsPeriod);
-            date = DateUtil.offsetSecond(date, (int) COLLECT_HERBS_DELAY);
+            date = DateUtil.offsetSecond(date, (int) ImmortalConstants.COLLECT_HERBS_DELAY);
 
             Date now = new Date();
             if (now.after(date)) {
-                SettingsCache.getInstance().setSettings(LAST_COLLECT_HERBS_TIME_KEYWORD, DateUtil.format(now, "yyyy-MM-dd HH:mm:ss"));
+                SettingsCache.getInstance().setSettings(ImmortalConstants.LAST_COLLECT_HERBS_TIME_KEYWORD, DateUtil.format(now, "yyyy-MM-dd HH:mm:ss"));
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵田收取"));
             }
-        }).schedule(COLLECT_HERBS_DELAY, COLLECT_HERBS_PERIOD);
+        }).schedule(ImmortalConstants.COLLECT_HERBS_DELAY, ImmortalConstants.COLLECT_HERBS_PERIOD);
     }
 
     /**
@@ -758,7 +753,9 @@ public class AutoExerciseCommand extends OwnerCommand {
         bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
 
         CONTINUE_ATTACK.set(true);
-        bossMap.values().forEach(g -> {
+        List<GroupBossStatus> randomSortBossList = new ArrayList<>(bossMap.values());
+        Collections.shuffle(randomSortBossList);
+        randomSortBossList.forEach(g -> {
             if (!CONTINUE_ATTACK.get()) {
                 return;
             }
@@ -769,13 +766,12 @@ public class AutoExerciseCommand extends OwnerCommand {
                     e.printStackTrace();
                 }
             }
-            waitRandomMillis(3000, 3000);
+            TimeUtil.waitRandomMillis(3000, 3000);
         });
     }
 
     private Map<Long, GroupBossStatus> initBossMap(List<Long> groupIds) {
         Map<Long, GroupBossStatus> map = new HashMap<>();
-        Collections.shuffle(groupIds);
         groupIds.forEach(id -> map.put(id, new GroupBossStatus(id)));
         return map;
     }
@@ -789,7 +785,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                 return null;
             }
 
-            if (SettingsCache.getInstance().getSettingsAsInt(MODE_KEYWORD, 0) != 2) {
+            if (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.MODE_KEYWORD, 0) != 2) {
                 return null;
             }
 
@@ -802,17 +798,17 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
             long gId = sender.getGroup().getId();
 
-            waitRandomMillis(500, 1000);
+            TimeUtil.waitRandomMillis(500, 500);
             Bot bot = MagicBotR.getBot();
-            if (notice.contains(NO_BOSS_KEYWORD)) {
+            if (notice.contains(ImmortalConstants.NO_BOSS_KEYWORD)) {
                 // 没有boss了
                 GROUP_BOSS_MAP.get(gId).setBossAllDefeated(true);
-            } else if (notice.contains(NUMBER_KEYWORD) && notice.contains(HAS_BOSS_KEYWORD)) {
+            } else if (notice.contains(ImmortalConstants.NUMBER_KEYWORD) && notice.contains(ImmortalConstants.HAS_BOSS_KEYWORD)) {
                 // 避免踩雷
                 String[] bossInfoArray = notice.split("\n");
                 List<String> bossInfo = new ArrayList<>();
                 for (String info : bossInfoArray) {
-                    if (info.contains(HAS_BOSS_KEYWORD)) {
+                    if (info.contains(ImmortalConstants.HAS_BOSS_KEYWORD)) {
                         bossInfo.add(info);
                     }
                 }
@@ -823,7 +819,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                 Stack<Integer> bossIndex = new Stack<>();
                 for (int i = 0; i < bossInfo.size(); i++) {
                     if (CalBossUtil.canAttackBoss(bossInfo.get(i),
-                            SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1), gId)) {
+                            SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1), gId)) {
                         bossIndex.push(i + 1);
                     }
                 }
@@ -833,17 +829,89 @@ public class AutoExerciseCommand extends OwnerCommand {
                 GROUP_BOSS_MAP.get(gId).setBossAllDefeated(false);
 
                 while (!GROUP_BOSS_MAP.get(gId).getBossAllDefeated() && CONTINUE_ATTACK.get() && !bossIndex.empty()) {
-                    bot.getGroupOrFail(gId).sendMessage(new PlainText("讨伐世界BOSS" + bossIndex.pop()));
-                    waitRandomMillis(ATTACK_BOSS_PERIOD, 2000);
+                    bot.getGroupOrFail(gId).sendMessage(new PlainText("感化首领" + bossIndex.pop()));
+                    TimeUtil.waitRandomMillis(ImmortalConstants.ATTACK_BOSS_PERIOD, 3000);
                 }
-            } else if (notice.contains(CANT_ATTACK_KEYWORD1) || notice.contains(CANT_ATTACK_KEYWORD2)) {
+            } else if (notice.contains(ImmortalConstants.CANT_ATTACK_KEYWORD1)
+                    || notice.contains(ImmortalConstants.CANT_ATTACK_KEYWORD2)
+                    || notice.contains(ImmortalConstants.CANT_ATTACK_KEYWORD3)) {
                 // 重伤
                 CONTINUE_ATTACK.set(false);
-                bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("讨伐【" + sender.getGroup().getName() + "】boss失败"));
+                List<Message> msgList = new ArrayList<>();
+                msgList.add(new PlainText("感化【" + sender.getGroup().getName() + "】boss失败"));
+
+                Healing healing = Healing.getRandom(SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1));
+                if (healing != null) {
+                    int i = 0;
+                    do {
+                        if (healing.getNumber() > 0) {
+                            msgList.add(new PlainText("百货购买" + healing.getNumber()));
+                        }
+                        msgList.add(new PlainText("使用" + healing.getName()));
+                        i++;
+                    } while (i * healing.getEffect() < 30);
+                }
+                commandThreadPoolUtil.addGroupTask(msgList, mainGroupId);
             }
             return null;
-        }, AUTO_COLLECT_KEY);
+        }, ImmortalConstants.AUTO_COLLECT_KEY);
     }
+
+    /**
+     * 统计农场数据
+     */
+    private void registerFarmStatic() {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice, atMe) -> {
+            if (!atMe) {
+                return null;
+            }
+            boolean farmMoneyStaticsKeyword = notice.contains(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD1)
+                    || notice.contains(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD2)
+                    || notice.contains(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD3);
+
+            if (farmMoneyStaticsKeyword && notice.contains(ImmortalConstants.FARM_POINT_STATICS_KEYWORD)) {
+                String[] info = notice.replace("，", ",").split(",");
+                int point = 0, money = 0;
+                String moneyStr = "0", pointStr = "0";
+                List<Message> err = new ArrayList<>();
+                for (String i : info) {
+                    if (i.startsWith(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD1)) {
+                        moneyStr = i.replace(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD1, "")
+                                .replace("枚", "").trim();
+                    } else if (i.startsWith(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD2)) {
+                        moneyStr = i.replace(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD2, "")
+                                .replace("枚赠送给你发展事业", "").trim();
+                    } else if (i.startsWith(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD3)) {
+                        moneyStr = i.replace(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD3, "")
+                                .replace("枚", "").trim();
+                    } else if (i.startsWith(ImmortalConstants.FARM_POINT_STATICS_KEYWORD)) {
+                        pointStr = i.replace(ImmortalConstants.FARM_POINT_STATICS_KEYWORD, "")
+                                .replace("：", "").replace(":", "")
+                                .replace("点", "").trim();
+                    }
+                }
+                try {
+                    money = Integer.parseInt(moneyStr);
+                    point = Integer.parseInt(pointStr);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    err.add(new PlainText("解析灵石或积分失败"));
+                }
+                if (err.size() > 0) {
+                    commandThreadPoolUtil.addGroupTask(err, sender.getGroup().getId());
+                    return null;
+                }
+                ImmortalFarmRecord immortalFarmRecord = new ImmortalFarmRecord();
+                immortalFarmRecord.setGroupId(sender.getGroup().getId());
+                immortalFarmRecord.setMoney(money);
+                immortalFarmRecord.setPoint(point);
+                immortalFarmRecord.setDate(DateUtil.format(new Date(), "yyyy-MM-dd HH:mm:ss"));
+                immortalFarmRecordService.createRecord(immortalFarmRecord);
+            }
+            return null;
+        }, ImmortalConstants.FARM_STATICS_KEY);
+    }
+
 
     /**
      * 悬赏令识别处理逻辑
@@ -886,7 +954,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                                 }
                             }
                         }
-                        if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
+                        if (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1) < 29) {
                             return new PlainText("悬赏令接取" + (i + 1));
                         } else {
                             return new PlainText("渡劫境悬赏令接取" + (i + 1));
@@ -894,7 +962,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                     }
                 }
 
-                if (SettingsCache.getInstance().getSettingsAsInt(BOT_RANK_KEYWORD, 1) < 29) {
+                if (SettingsCache.getInstance().getSettingsAsInt(ImmortalConstants.BOT_RANK_KEYWORD, 1) < 29) {
                     if (RANDOM.nextInt(100) < 30) {
                         return new PlainText("悬赏令刷新");
                     }
@@ -904,6 +972,9 @@ public class AutoExerciseCommand extends OwnerCommand {
         }), "AutoExerciseCommand");
     }
 
+    /**
+     * 取消悬赏令识别
+     */
     private void removeWanted() {
         EmptyStringCommand.removeLogic("AutoExerciseCommand");
     }
@@ -919,6 +990,157 @@ public class AutoExerciseCommand extends OwnerCommand {
                 s -> JSONObject.parseArray(s, String.class));
         return !CollectionUtils.isEmpty(wantedAwardKeyword)
                 && wantedAwardKeyword.stream().anyMatch(str::contains);
+    }
+
+    // 自动更新当前境界
+    private void registerAutoUpgradeRank() {
+        EmptyStringCommand.addLogic((sender, args, messageChain, subject, notice, atMe) -> {
+            if (!atMe) {
+                return null;
+            }
+            if (CollectionUtils.isEmpty(args)) {
+                return null;
+            }
+            String content = args.get(0);
+            if (!content.contains("恭喜道友突破") || !content.contains("成功")) {
+                return null;
+            }
+            String rankStr = content.replace("恭喜道友突破", "").replace("成功", "").trim();
+            int rank = CalBossUtil.getRank(rankStr);
+
+            List<Message> msgList = new ArrayList<>();
+
+            switch (rank) {
+                case 4:
+                    // 炼气圆满
+                    msgList.add(new PlainText("使用筑基丹"));
+                    break;
+                case 5:
+                    // 筑基初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用健身丹"));
+                    }
+                    break;
+                case 7:
+                    // 筑基圆满
+                    msgList.add(new PlainText("使用朝元丹"));
+                    msgList.add(new PlainText("使用聚顶丹"));
+                    break;
+                case 9:
+                    // 金丹初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用生命丹"));
+                    }
+                case 10:
+                    // 金丹圆满
+                    msgList.add(new PlainText("使用锻脉丹"));
+                    msgList.add(new PlainText("使用护脉丹"));
+                    break;
+                case 11:
+                    // 元婴初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用养怡丹"));
+                    }
+                    break;
+                case 13:
+                    // 元婴圆满
+                    msgList.add(new PlainText("使用天命淬体丹"));
+                    msgList.add(new PlainText("使用澄心塑魂丹"));
+                    msgList.add(new PlainText("使用混元仙体丹"));
+                    break;
+                case 14:
+                    // 化神初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用活仙心丹"));
+                    }
+                    break;
+                case 16:
+                    // 化神圆满
+                    msgList.add(new PlainText("使用黑炎丹"));
+                    msgList.add(new PlainText("使用金血丸"));
+                    break;
+                case 17:
+                    // 炼虚初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用三纹凝血丹"));
+                    }
+                    break;
+                case 19:
+                    // 炼虚圆满
+                    msgList.add(new PlainText("使用虚灵丹"));
+                    msgList.add(new PlainText("使用净明丹"));
+                    break;
+                case 20:
+                    // 合体初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用复灵红丹"));
+                    }
+                    break;
+                case 22:
+                    // 合体圆满
+                    msgList.add(new PlainText("使用安神灵液"));
+                    msgList.add(new PlainText("使用魇龙之血"));
+                    break;
+                case 23:
+                    // 大乘初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用幽冥寿丹"));
+                        msgList.add(new PlainText("使用幽冥寿丹"));
+                    }
+                    break;
+                case 25:
+                    // 大乘圆满
+                    msgList.add(new PlainText("使用化劫丹"));
+                    break;
+                case 26:
+                    // 渡劫初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用九阳大还丹"));
+                    }
+                    break;
+                case 29:
+                    // 半步真仙
+                    msgList.add(new PlainText("使用太上玄门丹"));
+                    break;
+                case 32:
+                    // 真仙圆满
+                    msgList.add(new PlainText("使用金仙破厄丹"));
+                    break;
+                case 33:
+                    // 金仙初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用九阳大还丹"));
+                    }
+                    break;
+                case 35:
+                    // 金仙圆满
+                    msgList.add(new PlainText("使用太乙炼髓丹"));
+                    break;
+                case 36:
+                    // 太乙初期
+                    for (int i = 0; i < 6; i++) {
+                        msgList.add(new PlainText("使用摄魂鬼丸"));
+                        msgList.add(new PlainText("使用混沌天罗丹"));
+                    }
+                    break;
+                default:
+                    break;
+            }
+            SettingsCache.getInstance().setSettings(ImmortalConstants.BOT_RANK_KEYWORD, rank);
+            return new PlainText("更新当前境界成功");
+        }, "immortal-auto-upgrade-rank");
+    }
+
+    private void stopAutoUpgradeRank() {
+        EmptyStringCommand.removeLogic("immortal-auto-upgrade-rank");
     }
 
     /**
@@ -945,7 +1167,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                 COMPLETE_TASK_TIMES.set(3);
                 COMPLETE_TASK_TIME_MILLIS.set(System.currentTimeMillis());
                 try {
-                    MagicTaskObserver.cancelTask(TASK_PERIOD_KEY);
+                    MagicTaskObserver.cancelTask(ImmortalConstants.TASK_PERIOD_KEY);
                 } catch (NullPointerException npe) {
                     npe.printStackTrace();
                 }
@@ -966,7 +1188,7 @@ public class AutoExerciseCommand extends OwnerCommand {
             }
             if (contents.length < 2 || !contents[1].contains("预计")) {
                 removeExplore();
-                SettingsCache.getInstance().setSettings(MODE_KEYWORD, 2);
+                SettingsCache.getInstance().setSettings(ImmortalConstants.MODE_KEYWORD, 2);
 
                 Bot bot = MagicBotR.getBot();
                 bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
@@ -1032,16 +1254,16 @@ public class AutoExerciseCommand extends OwnerCommand {
             return taskStatusEnum;
         }
 
-        if (msg.contains(TASK_COMPLETED_KEYWORD)) {
+        if (msg.contains(ImmortalConstants.TASK_COMPLETED_KEYWORD)) {
             return TaskStatusEnum.COMPLETE;
         }
 
-        if (msg.contains(DAILY_PERIOD_KEYWORD)) {
+        if (msg.contains(ImmortalConstants.DAILY_PERIOD_KEYWORD)) {
             hasDailyPeriod = false;
             return TaskStatusEnum.IN_CD;
         }
 
-        if (TASK_KEYWORD.stream().anyMatch(msg::contains)) {
+        if (ImmortalConstants.TASK_KEYWORD.stream().anyMatch(msg::contains)) {
             COMPLETE_TASK_TIME_MILLIS.set(timeMillis);
             COMPLETE_TASK_TIMES.addAndGet(1);
             return TaskStatusEnum.DO_IT;
@@ -1077,6 +1299,41 @@ public class AutoExerciseCommand extends OwnerCommand {
         public GroupBossStatus(Long groupId) {
             this.groupId = groupId;
             this.bossAllDefeated = false;
+        }
+    }
+
+    @AllArgsConstructor
+    @Getter
+    private enum Healing {
+        /**
+         * 回血丹药
+         */
+        SHENG_GU("生骨丹", 5, 8, 2),
+        HUA_YU("化瘀丹", 10, 9, 5),
+        GU_YUAN("固元丹", 15, 10, 8),
+        PEI_YUAN("培元丹", 20, 11, 11),
+        HUANG_LONG("黄龙丹", 25, 12, 14),
+        HUI_YUAN("回元丹", 30, 13, 17),
+        HUI_CHUN("回春丹", 35, 14, 20),
+        YANG_YUAN("养元丹", 40, 15, 23),
+        TAI_YUAN("太元真丹", 45, 16, 26),
+        JIU_YANG("九阳真丹", 50, 17, 29),
+        GUI_ZANG("归藏灵丹", 60, 18, 33),
+        TIAN_MING("天命血凝丹", 100, -1, 33),
+        ;
+
+        private final String name;
+        private final Integer effect;
+        private final Integer number;
+        private final Integer lowestRank;
+
+        public static Healing getRandom(int rank) {
+            if (rank <= 1) {
+                return null;
+            }
+            int length = Healing.values().length;
+            int rand = RANDOM.nextInt(length);
+            return Healing.values()[rand];
         }
     }
 }

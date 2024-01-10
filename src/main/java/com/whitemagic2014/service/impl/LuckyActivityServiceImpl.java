@@ -27,7 +27,8 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class LuckyActivityServiceImpl implements ActivityService<LuckyActivityServiceImpl.LuckyAwardRule> {
+public class LuckyActivityServiceImpl implements ActivityService<LuckyActivityServiceImpl.LuckyActivityRule,
+        LuckyActivityServiceImpl.LuckyAwardRule> {
 
     @Autowired
     private ActivityDao activityDao;
@@ -45,12 +46,13 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
     @Override
     public List<Message> joinActivity(long activityId, long userId) {
         // 抽奖功能
-        Activity activity = activityDao.getById(activityId);
+        Activity activity = activityDao.getById(activityId, true);
         if (activity == null) {
             return null;
         }
         List<LuckyAwardRule> luckyAwardRuleList = JSONObject.parseArray(activity.getAwardRule(), LuckyAwardRule.class);
         int r = RandomUtil.randomInt(RATE);
+        System.out.println("抽奖活动生成的随机数：" + r);
         int index = 0;
         String awardName = "谢谢惠顾";
         int awardNum = 0;
@@ -67,7 +69,7 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
 
     @Override
     public boolean updateById(Activity activity) {
-        Activity old = activityDao.getById(activity.getId());
+        Activity old = activityDao.getById(activity.getId(), true);
         if (old == null) {
             return false;
         }
@@ -77,22 +79,17 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
     }
 
     @Override
-    public Activity.ActivityRule buildRule(String ruleJson) {
-        try {
-            return JSONObject.parseObject(ruleJson, Activity.ActivityRule.class);
-        } catch (Exception e) {
-            log.error("活动规则构建失败", e);
-        }
-        return null;
+    public LuckyActivityRule buildRule(Activity.ActivityRule rule, List<String> args) {
+        return (LuckyActivityRule) rule;
     }
 
     @Override
     public List<LuckyAwardRule> buildAwardRule(String awardRuleJson) {
         try {
             List<LuckyAwardRule> awardRule = JSONObject.parseArray(awardRuleJson, LuckyAwardRule.class);
-            int rate = awardRule.stream().map(award -> (LuckyAwardRule) award).mapToInt(LuckyAwardRule::getRate).sum();
+            int rate = awardRule.stream().mapToInt(LuckyAwardRule::getRate).sum();
             // 概率之和应为100
-            if (rate != 100) {
+            if (rate != RATE) {
                 return null;
             }
             return awardRule;
@@ -103,8 +100,21 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
     }
 
     @Override
-    public List<Activity> queryActivity() {
-        return activityDao.queryActivity(Activity.ActivityType.LUCKY.getName());
+    public String getActivityDetail(Activity activity) {
+        StringBuilder builder = new StringBuilder();
+        List<LuckyAwardRule> awardRuleList = JSONObject.parseArray(activity.getAwardRule(), LuckyAwardRule.class);
+        builder.append("\n").append("奖品列表:");
+        awardRuleList.forEach(award -> {
+            builder.append("\n").append("奖品名称:").append(award.getAwardName());
+            builder.append(",").append("奖品数量:").append(award.getAwardNum());
+            builder.append(",").append("中奖概率:").append(award.getRate()).append("%");
+        });
+        return builder.toString();
+    }
+
+    @Data
+    public static class LuckyActivityRule extends Activity.ActivityRule {
+
     }
 
     @Data

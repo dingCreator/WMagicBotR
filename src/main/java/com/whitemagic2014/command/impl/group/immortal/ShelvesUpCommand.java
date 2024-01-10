@@ -85,6 +85,7 @@ public class ShelvesUpCommand extends OwnerCommand {
             if (upper) {
                 upper = false;
                 final AtomicBoolean start = new AtomicBoolean(keyword == null);
+                final AtomicBoolean skip = new AtomicBoolean(false);
                 forwardMsg.component6().forEach(node -> {
                     String singleMsg = node.component4().toString();
 
@@ -94,7 +95,14 @@ public class ShelvesUpCommand extends OwnerCommand {
                         }
                     }
 
-                    if (!start.get()) {
+                    if (singleMsg.startsWith("☆------") && singleMsg.contains("药材")) {
+                        skip.set(true);
+                        bot.getGroupOrFail(groupId).sendMessage(new PlainText("一键上草 全部 " + price));
+                    } else if (singleMsg.startsWith("☆------") && !singleMsg.contains("药材")) {
+                        skip.set(false);
+                    }
+
+                    if (!start.get() || skip.get()) {
                         return;
                     }
 
@@ -118,9 +126,9 @@ public class ShelvesUpCommand extends OwnerCommand {
                     }
 
                     if (!StringUtils.isEmpty(name) && count > 0 && !EXCLUDES.contains(name)) {
-                        bot.getGroupOrFail(groupId).sendMessage(new PlainText("坊市上架" + name + " " + price + " " + count));
+                        bot.getGroupOrFail(groupId).sendMessage(new PlainText("坊市上架 " + name + " " + price + " " + count));
                         try {
-                            TimeUtil.waitRandomMillis(5000, 3000);
+                            TimeUtil.waitRandomMillis(2000, 3000);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

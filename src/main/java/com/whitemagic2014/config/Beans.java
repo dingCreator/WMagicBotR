@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * @author: magic chen
  * @date: 2020/9/1 11:48
  **/
-@Configuration
+//@Configuration
 public class Beans {
 
 
