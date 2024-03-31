@@ -45,7 +45,7 @@ public interface ActivityService<Rule extends Activity.ActivityRule, AwardRule e
      * @param args 扩展参数
      * @return 构建结果 null-构建失败
      */
-    Rule buildRule(Activity.ActivityRule rule, List<String> args);
+    Rule buildRule(String rule, List<String> args);
 
     /**
      * 构建奖品规则
@@ -58,7 +58,7 @@ public interface ActivityService<Rule extends Activity.ActivityRule, AwardRule e
     /**
      * 根据活动名称查询活动详情
      *
-     * @param activity
+     * @param activity 活动
      * @return 活动详情
      */
     String getActivityDetail(Activity activity);

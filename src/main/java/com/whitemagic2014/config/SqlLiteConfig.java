@@ -1,5 +1,6 @@
 package com.whitemagic2014.config;
 
+import com.dingCreator.astrology.database.DatabaseContext;
 import com.whitemagic2014.pojo.DBVersionTable;
 import com.whitemagic2014.pojo.Version;
 import com.whitemagic2014.util.Path;
@@ -44,6 +45,7 @@ public class SqlLiteConfig {
         sessionFactory.setDataSource(dataSource);
         sessionFactory
                 .setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/*.xml"));
+        DatabaseContext.setSqlSession(sessionFactory.getObject());
         return sessionFactory.getObject();
     }
 

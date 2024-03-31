@@ -749,8 +749,10 @@ public class AutoExerciseCommand extends OwnerCommand {
         registerCollect();
 
         // 只出关一次即可
-        bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵石出关"));
-        bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
+        if (!WantedCommand.wanted) {
+            bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("灵石出关"));
+            bot.getGroupOrFail(mainGroupId).sendMessage(new PlainText("闭关"));
+        }
 
         CONTINUE_ATTACK.set(true);
         List<GroupBossStatus> randomSortBossList = new ArrayList<>(bossMap.values());
@@ -880,7 +882,7 @@ public class AutoExerciseCommand extends OwnerCommand {
                                 .replace("枚", "").trim();
                     } else if (i.startsWith(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD2)) {
                         moneyStr = i.replace(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD2, "")
-                                .replace("枚赠送给你发展事业", "").trim();
+                                .replace("枚赠送给你", "").trim();
                     } else if (i.startsWith(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD3)) {
                         moneyStr = i.replace(ImmortalConstants.FARM_MONEY_STATICS_KEYWORD3, "")
                                 .replace("枚", "").trim();

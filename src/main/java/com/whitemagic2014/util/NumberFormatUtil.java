@@ -94,4 +94,12 @@ public class NumberFormatUtil {
         }
         return nums.stream().distinct().collect(Collectors.toList());
     }
+
+    public static List<Long> numberListFormat(List<String> list) {
+        try {
+            return list.stream().map(Long::parseLong).collect(Collectors.toList());
+        } catch (Exception e) {
+        }
+        return new ArrayList<>();
+    }
 }

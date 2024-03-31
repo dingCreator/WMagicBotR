@@ -106,14 +106,34 @@ public class ActivityManagerUtil {
         }
     }
 
-    public String updateActivity(Activity old, String keywordStr, String limitTypeStr, Integer limitTimes,
-                                 String successRepliesStr, String failedRepliesStr) {
+    public String updateActivity(long activityId, String settingName, String settingVal) {
+        Activity old = getById(activityId, false);
+        if (Objects.isNull(old)) {
+            return "活动不存在";
+        }
+        switch (settingName) {
+            case "规则":
+
+                break;
+            case "奖品":
+
+                break;
+            case "开始时间":
+
+                break;
+            case "结束时间":
+
+                break;
+
+            default:
+                return "配置项错误";
+        }
         ActivityService<?, ?> activityService = activityServiceList.stream().filter(actService ->
                 actService.support(old.getActivityType())).findFirst().orElse(null);
-        if (activityService == null) {
+        if (Objects.isNull(activityService)) {
             return "活动类型有误";
         }
-
+        activityService.updateById(old);
         return null;
     }
 
@@ -482,15 +502,15 @@ public class ActivityManagerUtil {
      * @param failReplies    参与失败回复
      * @return 公共规则
      */
-    public Activity.ActivityRule buildCommonRule(int limit, int totalLimit, List<String> keywords,
-                                                 List<String> successReplies, List<String> failReplies) {
+    public String buildCommonRuleJsonString(int limit, int totalLimit, List<String> keywords,
+                                            List<String> successReplies, List<String> failReplies) {
         Activity.ActivityRule ruleParam = new Activity.ActivityRule();
         ruleParam.setLimit(limit);
         ruleParam.setTotalLimit(totalLimit);
         ruleParam.setKeywords(keywords);
         ruleParam.setSuccessReplies(successReplies);
         ruleParam.setFailReplies(failReplies);
-        return ruleParam;
+        return JSONObject.toJSONString(ruleParam);
     }
 
     /**
@@ -507,10 +527,10 @@ public class ActivityManagerUtil {
      */
     public String buildActivityRule(String activityType, int limit, int totalLimit, List<String> keywords,
                                     List<String> successReplies, List<String> failReplies, List<String> otherArgs) {
-        Activity.ActivityRule params = this.buildCommonRule(limit, totalLimit, keywords, successReplies, failReplies);
+        String params = this.buildCommonRuleJsonString(limit, totalLimit, keywords, successReplies, failReplies);
         ActivityService<?, ?> activityService = this.getActivityServiceByActivityType(activityType);
         if (Objects.nonNull(activityService)) {
-            JSONObject.toJSONString(activityService.buildRule(params, otherArgs));
+            return JSONObject.toJSONString(activityService.buildRule(params, otherArgs));
         }
         return JSONObject.toJSONString(params);
     }

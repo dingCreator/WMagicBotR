@@ -144,7 +144,7 @@ public class SearchWork extends NoAuthCommand {
         }
 
         // 组装返回消息
-        List<String> preview = Collections.singletonList("数据来自花舞组作业网，请大家多多支持花舞组");
+        List<String> preview = Collections.singletonList("数据来自花舞组作业网");
         String title = "点击查看作业详情";
         String brief = "";
         String source = "";

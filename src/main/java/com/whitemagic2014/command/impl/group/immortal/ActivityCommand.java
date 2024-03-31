@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.command.impl.group.AdminCommand;
 import com.whitemagic2014.config.properties.GlobalParam;
+import com.whitemagic2014.pojo.Activity;
 import com.whitemagic2014.pojo.CommandProperties;
 
 import com.whitemagic2014.util.ActivityManagerUtil;
@@ -98,7 +99,7 @@ public class ActivityCommand extends AdminCommand {
         // 获取参数
         String activityName = args.get(0);
         String activityType = args.get(1);
-        String activityRuleArg = args.get(2);
+        String activityRuleArgStr = args.get(2);
         String awardRuleArg = args.get(3);
         String startTime = args.get(4);
         String endTime = args.get(5);
@@ -107,8 +108,9 @@ public class ActivityCommand extends AdminCommand {
         if (INVALID_ACTIVITY_NAME.equals(activityName)) {
             return new PlainText("活动名称非法");
         }
-        String[] activityRuleArgs = activityRuleArg.split("\\|");
-        List<String> activityRuleArgsList = Arrays.asList(activityRuleArgs);
+        String[] activityRuleArgs = activityRuleArgStr.split("\\|");
+        List<String> activityRuleArgsList = new ArrayList<>(activityRuleArgs.length);
+        activityRuleArgsList.addAll(Arrays.asList(activityRuleArgs));
         if (activityRuleArgsList.size() < 7) {
             return new PlainText("活动规则配置缺少参数");
         }
@@ -152,40 +154,20 @@ public class ActivityCommand extends AdminCommand {
     }
 
     private Message updateActivity(List<String> args) {
-        if (args.size() < 4) {
+        if (args.size() < 3) {
             return new PlainText(String.format(FORMAT_INFO_EDIT, globalParam.botName));
         }
-
-        switch (args.get(2)) {
-            case "触发关键词":
-
-                break;
-            case "限制类型":
-
-                break;
-            case "限制次数":
-
-                break;
-            case "参与成功回复":
-
-                break;
-            case "参与失败回复":
-
-                break;
-            case "开始时间":
-
-                break;
-            case "结束时间":
-
-                break;
-            default:
-                return new PlainText("配置项错误");
+        long activityId;
+        try {
+            activityId = Long.parseLong(args.remove(0));
+        } catch (Exception e) {
+            return new PlainText("活动ID非法");
         }
-        return new PlainText("");
+        return new PlainText(activityManagerUtil.updateActivity(activityId, args.remove(0), args.remove(0)));
     }
 
     private Message listActivity(List<String> args) {
-        return null;
+        return new PlainText("功能开发中");
     }
 
     private Message deleteActivity(List<String> args) {

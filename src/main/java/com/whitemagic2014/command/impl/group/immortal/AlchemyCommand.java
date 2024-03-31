@@ -177,7 +177,7 @@ public class AlchemyCommand extends NoAuthCommand {
                 long startTime = System.currentTimeMillis();
                 // 自动炼丹核心算法
                 String order = generatePrescript(materialList, properties);
-                System.out.println("cost: " + (System.currentTimeMillis() - startTime) + " ms");
+                log.info("炼丹总花费时间: {} ms", System.currentTimeMillis() - startTime);
 
                 Bot bot = MagicBotR.getBot();
                 if (!PROP_NOT_FOUND_RESP.equals(order) && !SHOW_MODE.get() && !order.startsWith(HERB_NOT_ENOUGH)) {
@@ -196,7 +196,7 @@ public class AlchemyCommand extends NoAuthCommand {
                 }
                 return new PlainText("完成分析任务");
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("炼丹出错", e);
             } finally {
                 // 无论炼丹结果如何，释放所有锁
                 LOCK.unlock();
@@ -232,7 +232,6 @@ public class AlchemyCommand extends NoAuthCommand {
         // 药材数量
         materialNumMap.clear();
 
-        // 1-按冷热顺序排序药材
         List<Material> baseMaterial = new ArrayList<>(materialList.size() * materialList.get(0).getNum());
         for (Material oldM : materialList) {
             materialNumMap.put(oldM.getName(), oldM.getNum());
@@ -241,33 +240,37 @@ public class AlchemyCommand extends NoAuthCommand {
             }
         }
         log.info("药材数量【{}】", baseMaterial.size());
-
+        // 1-按冷热顺序排序药材
         // 主药-冷热排序
         List<Material> mainMaterialSortedByNature = baseMaterial.stream()
+                .filter(material -> material.getNum() < 20)
                 .sorted(Comparator.comparingInt(o -> o.getMainMaterial().getNature()))
-                .sorted(Comparator.comparingInt(o -> o.getMainMaterial().getPower()))
+//                .sorted(Comparator.comparingInt(o -> o.getMainMaterial().getPower()))
                 .map(Material::deepCopy).collect(Collectors.toList());
         // 药引-冷热排序
         List<Material> associateMaterialSortedByNature = baseMaterial.stream()
+                .filter(material -> material.getNum() < 20)
                 .sorted(Comparator.comparingInt(o -> o.getAssociateMaterial().getNature()))
-                .sorted(Comparator.comparingInt(o -> o.getAssociateMaterial().getPower()))
+//                .sorted(Comparator.comparingInt(o -> o.getAssociateMaterial().getPower()))
                 .map(Material::deepCopy).collect(Collectors.toList());
         // 主药-药力排序
 //        List<Material> mainMaterialSortedByEffect = baseMaterial.stream().sorted(Comparator.comparingInt(o ->
 //                o.getMainMaterial().getProperties().getEffectNums())).map(Material::deepCopy)
 //                .collect(Collectors.toList());
         // 辅药-药力排序
-//        List<Material> supportMaterialSortedByEffect = baseMaterial.stream().sorted(Comparator.comparingInt(o ->
-//                o.getSupportMaterial().getProperties().getEffectNums())).map(Material::deepCopy)
-//                .collect(Collectors.toList());
+        List<Material> supportMaterialSortedByEffect = baseMaterial.stream()
+                .filter(material -> material.getNum() < 20)
+                .sorted(Comparator.comparingInt(o -> o.getSupportMaterial().getProperties().getEffectNums()))
+                .map(Material::deepCopy)
+                .collect(Collectors.toList());
 
         // 2-双指针降低冷热调和的时间复杂度
         // 3-匹配辅药
         long calStartTimeMillis = System.currentTimeMillis();
         calAlchemy(mainMaterialSortedByNature, associateMaterialSortedByNature,
 //                mainMaterialSortedByEffect, supportMaterialSortedByEffect,
-                baseMaterial, result, targetList, suggest);
-        log.info("cal alchemy cost:{} ms", System.currentTimeMillis() - calStartTimeMillis);
+                supportMaterialSortedByEffect, result, targetList, suggest);
+        log.info("计算所有配方花费: {} ms", System.currentTimeMillis() - calStartTimeMillis);
 
         // 4-获取最优解
         if (CollectionUtils.isEmpty(result)) {
@@ -288,6 +291,7 @@ public class AlchemyCommand extends NoAuthCommand {
                 Material associateMaterial = ml.get(1);
                 Material supportMaterial = ml.get(2);
 
+                // 忽略消耗大量药材的配方
                 if (mainMaterial.getNum() > 20 || associateMaterial.getNum() > 20 || supportMaterial.getNum() > 20) {
                     continue;
                 }
@@ -364,7 +368,7 @@ public class AlchemyCommand extends NoAuthCommand {
             // 另一种药材的属性
             MaterialEffect anotherEffect;
             int anotherEffectNumFrom, anotherEffectNumTo;
-            // 冷热
+            // 主药冷热
             int mainNature;
             // 主药副本
             Material mainMaterial = mainMaterialSortedByNature.get(leftPointer).deepCopy();

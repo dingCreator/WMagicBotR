@@ -44,7 +44,7 @@ public class SignActivityServiceImpl implements ActivityService<SignActivityServ
 
     @Override
     public List<Message> joinActivity(long activityId, long userId) {
-        Activity activity = activityDao.getById(activityId, true);
+        Activity activity = activityDao.getById(activityId, false);
         if (activity == null) {
             return null;
         }
@@ -64,8 +64,8 @@ public class SignActivityServiceImpl implements ActivityService<SignActivityServ
     }
 
     @Override
-    public SignActivityRule buildRule(Activity.ActivityRule rule, List<String> args) {
-        return (SignActivityRule) rule;
+    public SignActivityRule buildRule(String rule, List<String> args) {
+        return JSONObject.parseObject(rule, SignActivityRule.class);
     }
 
     @Override

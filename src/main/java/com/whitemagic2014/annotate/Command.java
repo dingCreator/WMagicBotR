@@ -25,4 +25,9 @@ public @interface Command {
      **/
     boolean autoLoad() default true;
 
+    int minArgsSize() default 0;
+
+    int maxArgsSize() default 20;
+
+    String invalidArgsSizeErrorMsg() default "参数数量错误";
 }

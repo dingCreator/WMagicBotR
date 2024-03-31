@@ -1,5 +1,6 @@
 package com.whitemagic2014.command.impl.everywhere;
 
+import com.dingCreator.astrology.util.BattleUtil;
 import com.whitemagic2014.annotate.Command;
 import com.whitemagic2014.pojo.CommandProperties;
 import net.mamoe.mirai.contact.Contact;

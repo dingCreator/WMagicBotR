@@ -164,6 +164,12 @@
             <artifactId>async-http-client</artifactId>
             <version>2.12.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.dingCreator</groupId>
+            <artifactId>astrology</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

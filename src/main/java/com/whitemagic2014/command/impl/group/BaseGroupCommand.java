@@ -1,5 +1,6 @@
 package com.whitemagic2014.command.impl.group;
 
+import com.dingCreator.astrology.exception.BusinessException;
 import com.whitemagic2014.command.GroupCommand;
 import com.whitemagic2014.config.properties.CommandRule;
 import com.whitemagic2014.config.properties.GlobalParam;
@@ -12,6 +13,7 @@ import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageUtils;
+import net.mamoe.mirai.message.data.PlainText;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
@@ -43,15 +45,16 @@ public abstract class BaseGroupCommand implements GroupCommand {
         if (!checkResult.isSuccess()) {
             return new At(sender.getId()).plus(" " + checkResult.getReturnMessage());
         }
-
-        Message message = executeHandle(sender, args, messageChain, subject);
-        if (message != null) {
-            CommandRule rule = SpringApplicationContextUtil.getBean(CommandRule.class);
-            if (rule.enabledBotAccountBlacklist && rule.botAccountBlacklist.contains(sender.getId())) {
-                return new At(sender.getId()).plus(" 你已被拉黑，请联系管理员处理");
-            }
+        CommandRule rule = SpringApplicationContextUtil.getBean(CommandRule.class);
+        if (rule.enabledBotAccountBlacklist && rule.botAccountBlacklist.contains(sender.getId())) {
+            return new At(sender.getId()).plus(" 你已被拉黑，请联系管理员处理");
         }
-        return message;
+
+        try {
+            return executeHandle(sender, args, messageChain, subject);
+        } catch (BusinessException be) {
+            return new At(sender.getId()).plus(" " + be.getDesc());
+        }
     }
 
 

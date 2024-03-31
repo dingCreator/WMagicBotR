@@ -69,7 +69,7 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
 
     @Override
     public boolean updateById(Activity activity) {
-        Activity old = activityDao.getById(activity.getId(), true);
+        Activity old = activityDao.getById(activity.getId(), false);
         if (old == null) {
             return false;
         }
@@ -79,8 +79,8 @@ public class LuckyActivityServiceImpl implements ActivityService<LuckyActivitySe
     }
 
     @Override
-    public LuckyActivityRule buildRule(Activity.ActivityRule rule, List<String> args) {
-        return (LuckyActivityRule) rule;
+    public LuckyActivityRule buildRule(String rule, List<String> args) {
+        return JSONObject.parseObject(rule, LuckyActivityRule.class);
     }
 
     @Override

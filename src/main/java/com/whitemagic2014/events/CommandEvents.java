@@ -346,7 +346,16 @@ public class CommandEvents extends SimpleListenerHost {
                 if (!validCommand(command, event)) {
                     return ListeningStatus.LISTENING;
                 }
-                Message result = command.execute(event.getSender(), getArgs(oriMsg), event.getMessage(), event.getSubject());
+                Message result;
+                ArrayList<String> args = getArgs(oriMsg);
+                com.whitemagic2014.annotate.Command cmd =
+                        command.getClass().getAnnotation(com.whitemagic2014.annotate.Command.class);
+                if (args.size() < cmd.minArgsSize() || args.size() > cmd.maxArgsSize()) {
+                    result = new PlainText(cmd.invalidArgsSizeErrorMsg());
+                } else {
+                    result = command.execute(event.getSender(), args, event.getMessage(), event.getSubject());
+                }
+
                 if (result != null) {
                     event.getSubject().sendMessage(result);
                 }

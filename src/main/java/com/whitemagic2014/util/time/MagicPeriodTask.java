@@ -1,5 +1,7 @@
 package com.whitemagic2014.util.time;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Date;
 
 /**
@@ -7,6 +9,7 @@ import java.util.Date;
  * @author: magic chen
  * @date: 2020/9/30 16:40
  **/
+@Slf4j
 public class MagicPeriodTask extends MagicTask {
 
 
@@ -30,7 +33,11 @@ public class MagicPeriodTask extends MagicTask {
     @Override
     public void run() {
         logger.info("PeriodTask [" + taskKey + "] Fired");
-        taskTk.handle();
+        try {
+            taskTk.handle();
+        } catch (Exception e) {
+            log.error("execute period task failed", e);
+        }
     }
 
     public void schedule(long delay, long period) {
